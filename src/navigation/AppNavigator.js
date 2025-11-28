@@ -14,6 +14,7 @@ import AboutScreen from '../screens/About/AboutScreen';
 import FeedbackScreen from '../screens/Feedback/FeedbackScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import QRGeneratorScreen from '../screens/QRGenerator/QRGeneratorScreen';
+import BookmarksScreen from '../screens/Bookmarks/BookmarksScreen';
 import AdminLoginScreen from '../screens/Admin/AdminLoginScreen';
 import AdminDashboard from '../screens/Admin/AdminDashboard';
 import ToolsManager from '../screens/Admin/ToolsManager';
@@ -52,6 +53,7 @@ export default function AppNavigator() {
                     options={{ title: 'Watch Video' }}
                 />
                 <Stack.Screen name="Apps" component={AppsScreen} options={{ title: 'App Links' }} />
+                <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ title: 'My Bookmarks' }} />
                 <Stack.Screen name="About" component={AboutScreen} options={{ title: 'About' }} />
                 <Stack.Screen name="Feedback" component={FeedbackScreen} options={{ title: 'Feedback' }} />
                 <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />

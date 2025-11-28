@@ -1,19 +1,56 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Share, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
+import ViewShot from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
 
 export default function QRGeneratorScreen() {
     const { theme } = useTheme();
     const [url, setUrl] = useState('');
     const [generatedUrl, setGeneratedUrl] = useState('');
+    const viewShotRef = useRef();
 
     const handleGenerate = () => {
         if (url.trim()) {
             setGeneratedUrl(url);
+        }
+    };
+
+    const handleSaveQR = async () => {
+        try {
+            // Request permission
+            const { status } = await MediaLibrary.requestPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Please grant permission to save images to your gallery.');
+                return;
+            }
+
+            // Capture the QR code
+            const uri = await viewShotRef.current.capture();
+
+            // Save to gallery
+            await MediaLibrary.saveToLibraryAsync(uri);
+
+            Alert.alert('Success', 'QR Code saved to gallery!');
+        } catch (error) {
+            console.error('Error saving QR code:', error);
+            Alert.alert('Error', 'Failed to save QR code. Please try again.');
+        }
+    };
+
+    const handleShareQR = async () => {
+        try {
+            await Share.share({
+                message: `QR Code Content: ${generatedUrl}`,
+                title: 'Share QR Code',
+            });
+        } catch (error) {
+            console.error('Error sharing:', error);
         }
     };
 
@@ -63,14 +100,16 @@ export default function QRGeneratorScreen() {
                 {/* QR Code Display */}
                 {generatedUrl ? (
                     <View style={[styles.qrCard, { backgroundColor: theme.backgroundCard }, shadows.large]}>
-                        <View style={styles.qrContainer}>
-                            <QRCode
-                                value={generatedUrl}
-                                size={200}
-                                color={theme.text}
-                                backgroundColor={theme.backgroundCard}
-                            />
-                        </View>
+                        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1.0 }}>
+                            <View style={styles.qrContainer}>
+                                <QRCode
+                                    value={generatedUrl}
+                                    size={200}
+                                    color={theme.text}
+                                    backgroundColor="#FFFFFF"
+                                />
+                            </View>
+                        </ViewShot>
                         <Text style={[styles.qrUrl, { color: theme.textSecondary }]} numberOfLines={2}>
                             {generatedUrl}
                         </Text>
@@ -78,6 +117,7 @@ export default function QRGeneratorScreen() {
                         <View style={styles.actionButtons}>
                             <TouchableOpacity
                                 style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
+                                onPress={handleSaveQR}
                             >
                                 <Ionicons name="download" size={20} color={theme.primary} />
                                 <Text style={[styles.actionButtonText, { color: theme.primary }]}>Save</Text>
@@ -85,6 +125,7 @@ export default function QRGeneratorScreen() {
 
                             <TouchableOpacity
                                 style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
+                                onPress={handleShareQR}
                             >
                                 <Ionicons name="share-social" size={20} color={theme.primary} />
                                 <Text style={[styles.actionButtonText, { color: theme.primary }]}>Share</Text>

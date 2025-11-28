@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { getAllDocuments, createDocument, updateDocument, deleteDocument } from '../../services/firebase';
+import UploadProgress from '../../components/UploadProgress';
 
 export default function ToolsManager({ navigation }) {
     const { theme } = useTheme();
@@ -12,6 +13,8 @@ export default function ToolsManager({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [editingTool, setEditingTool] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     // Form fields
     const [title, setTitle] = useState('');
@@ -59,7 +62,14 @@ export default function ToolsManager({ navigation }) {
             return;
         }
 
+        setModalVisible(false);
+        setUploading(true);
+        setUploadProgress(0);
+
         try {
+            setUploadProgress(30);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             const toolData = {
                 title: title.trim(),
                 description: description.trim(),
@@ -67,18 +77,25 @@ export default function ToolsManager({ navigation }) {
                 category: category.trim() || 'General',
             };
 
+            setUploadProgress(60);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             if (editingTool) {
                 await updateDocument('tools', editingTool.id, toolData);
-                Alert.alert('Success', 'Tool updated successfully');
             } else {
                 await createDocument('tools', toolData);
-                Alert.alert('Success', 'Tool added successfully');
             }
 
-            setModalVisible(false);
+            setUploadProgress(90);
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            setUploadProgress(100);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             loadTools();
         } catch (error) {
             console.error('Error saving tool:', error);
+            setUploading(false);
             Alert.alert('Error', 'Failed to save tool');
         }
     };
@@ -251,6 +268,12 @@ export default function ToolsManager({ navigation }) {
                     </View>
                 </View>
             </Modal>
+
+            <UploadProgress
+                visible={uploading}
+                progress={uploadProgress}
+                onComplete={() => setUploading(false)}
+            />
         </View>
     );
 }

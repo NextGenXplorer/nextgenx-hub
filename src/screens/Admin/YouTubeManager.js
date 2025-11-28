@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { getAllDocuments, createDocument, updateDocument, deleteDocument } from '../../services/firebase';
+import UploadProgress from '../../components/UploadProgress';
 
 export default function YouTubeManager({ navigation }) {
     const { theme } = useTheme();
@@ -12,6 +13,8 @@ export default function YouTubeManager({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [editingVideo, setEditingVideo] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     // Form fields
     const [title, setTitle] = useState('');
@@ -72,7 +75,15 @@ export default function YouTubeManager({ navigation }) {
             return;
         }
 
+        setModalVisible(false);
+        setUploading(true);
+        setUploadProgress(0);
+
         try {
+            // Simulate progress
+            setUploadProgress(30);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             const extractedId = extractVideoId(videoId.trim());
 
             const videoData = {
@@ -81,18 +92,25 @@ export default function YouTubeManager({ navigation }) {
                 description: description.trim(),
             };
 
+            setUploadProgress(60);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             if (editingVideo) {
                 await updateDocument('youtubeLinks', editingVideo.id, videoData);
-                Alert.alert('Success', 'Video updated successfully');
             } else {
                 await createDocument('youtubeLinks', videoData);
-                Alert.alert('Success', 'Video added successfully');
             }
 
-            setModalVisible(false);
+            setUploadProgress(90);
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            setUploadProgress(100);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             loadVideos();
         } catch (error) {
             console.error('Error saving video:', error);
+            setUploading(false);
             Alert.alert('Error', 'Failed to save video');
         }
     };
@@ -262,6 +280,13 @@ export default function YouTubeManager({ navigation }) {
                     </View>
                 </View>
             </Modal>
+
+            {/* Upload Progress */}
+            <UploadProgress
+                visible={uploading}
+                progress={uploadProgress}
+                onComplete={() => setUploading(false)}
+            />
         </View>
     );
 }

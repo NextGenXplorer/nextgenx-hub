@@ -6,11 +6,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
+import { getBookmarkCount } from '../../services/bookmarkService';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ProfileScreen({ navigation }) {
     const { theme } = useTheme();
     const { user } = useAuth();
     const [userName, setUserName] = useState('');
+    const [bookmarkCount, setBookmarkCount] = useState(0);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            loadBookmarkCount();
+        }, [])
+    );
 
     useEffect(() => {
         loadUserName();
@@ -24,6 +33,15 @@ export default function ProfileScreen({ navigation }) {
             }
         } catch (error) {
             console.error('Error loading user name:', error);
+        }
+    };
+
+    const loadBookmarkCount = async () => {
+        try {
+            const count = await getBookmarkCount();
+            setBookmarkCount(count);
+        } catch (error) {
+            console.error('Error loading bookmark count:', error);
         }
     };
 
@@ -92,11 +110,17 @@ export default function ProfileScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={[styles.optionCard, { backgroundColor: theme.backgroundCard }, shadows.small]}
+                    onPress={() => navigation.navigate('Bookmarks')}
                 >
-                    <View style={[styles.optionIcon, { backgroundColor: theme.accent3 }]}>
-                        <Ionicons name="bookmark" size={24} color={theme.primary} />
+                    <View style={[styles.optionIcon, { backgroundColor: '#FFE5E5' }]}>
+                        <Ionicons name="heart" size={24} color="#FF6B6B" />
                     </View>
                     <Text style={[styles.optionText, { color: theme.text }]}>My Bookmarks</Text>
+                    {bookmarkCount > 0 && (
+                        <View style={[styles.badge, { backgroundColor: '#FF6B6B' }]}>
+                            <Text style={styles.badgeText}>{bookmarkCount}</Text>
+                        </View>
+                    )}
                     <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
                 </TouchableOpacity>
 
@@ -223,6 +247,19 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.lg,
         gap: spacing.sm,
         marginTop: spacing.md,
+    },
+    badge: {
+        minWidth: 20,
+        height: 20,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 6,
+    },
+    badgeText: {
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.bold,
+        color: '#FFFFFF',
     },
     logoutText: {
         fontSize: fontSize.lg,

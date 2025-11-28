@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { getAllDocuments, createDocument, updateDocument, deleteDocument } from '../../services/firebase';
+import UploadProgress from '../../components/UploadProgress';
 
 export default function AppsManager({ navigation }) {
     const { theme } = useTheme();
@@ -12,6 +13,8 @@ export default function AppsManager({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [editingApp, setEditingApp] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     // Form fields
     const [name, setName] = useState('');
@@ -59,7 +62,14 @@ export default function AppsManager({ navigation }) {
             return;
         }
 
+        setModalVisible(false);
+        setUploading(true);
+        setUploadProgress(0);
+
         try {
+            setUploadProgress(30);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             const appData = {
                 name: name.trim(),
                 url: url.trim(),
@@ -67,18 +77,25 @@ export default function AppsManager({ navigation }) {
                 icon: icon || 'apps',
             };
 
+            setUploadProgress(60);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             if (editingApp) {
                 await updateDocument('apps', editingApp.id, appData);
-                Alert.alert('Success', 'App updated successfully');
             } else {
                 await createDocument('apps', appData);
-                Alert.alert('Success', 'App added successfully');
             }
 
-            setModalVisible(false);
+            setUploadProgress(90);
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            setUploadProgress(100);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             loadApps();
         } catch (error) {
             console.error('Error saving app:', error);
+            setUploading(false);
             Alert.alert('Error', 'Failed to save app');
         }
     };
@@ -269,6 +286,12 @@ export default function AppsManager({ navigation }) {
                     </View>
                 </View>
             </Modal>
+
+            <UploadProgress
+                visible={uploading}
+                progress={uploadProgress}
+                onComplete={() => setUploading(false)}
+            />
         </View>
     );
 }

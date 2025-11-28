@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
@@ -77,6 +77,51 @@ export default function AboutScreen() {
                         Have questions? Reach out to us at hello@nextgenx.com
                     </Text>
                 </View>
+
+                {/* Social Media Section */}
+                <View style={[styles.card, { backgroundColor: theme.backgroundCard }, shadows.small]}>
+                    <View style={[styles.cardIcon, { backgroundColor: theme.accent3 }]}>
+                        <Ionicons name="share-social" size={24} color={theme.primary} />
+                    </View>
+                    <Text style={[styles.cardTitle, { color: theme.text }]}>Follow Us</Text>
+                    <Text style={[styles.cardText, { color: theme.textSecondary }]}>
+                        Connect with us on social media
+                    </Text>
+
+                    <View style={styles.socialContainer}>
+                        {/* Instagram */}
+                        <TouchableOpacity
+                            style={[styles.socialButton, { backgroundColor: '#E4405F' }, shadows.small]}
+                            onPress={() => Linking.openURL('https://www.instagram.com/nexgenxplorerr?igsh=YWV0ZHRuZDZ0M2V3')}
+                        >
+                            <Ionicons name="logo-instagram" size={28} color="#FFFFFF" />
+                        </TouchableOpacity>
+
+                        {/* WhatsApp */}
+                        <TouchableOpacity
+                            style={[styles.socialButton, { backgroundColor: '#25D366' }, shadows.small]}
+                            onPress={() => Linking.openURL('https://whatsapp.com/channel/0029VaU05uG9RZAeiXKyEu06')}
+                        >
+                            <Ionicons name="logo-whatsapp" size={28} color="#FFFFFF" />
+                        </TouchableOpacity>
+
+                        {/* YouTube */}
+                        <TouchableOpacity
+                            style={[styles.socialButton, { backgroundColor: '#FF0000' }, shadows.small]}
+                            onPress={() => Linking.openURL('https://youtube.com/@nexgenxplorer?si=UG-wBC8UIyeT4bbw')}
+                        >
+                            <Ionicons name="logo-youtube" size={28} color="#FFFFFF" />
+                        </TouchableOpacity>
+
+                        {/* Play Store */}
+                        <TouchableOpacity
+                            style={[styles.socialButton, { backgroundColor: '#34A853' }, shadows.small]}
+                            onPress={() => Linking.openURL('https://play.google.com/store/apps/dev?id=8262374975871504599')}
+                        >
+                            <Ionicons name="logo-google-playstore" size={28} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </View>
         </ScrollView>
     );
@@ -141,5 +186,18 @@ const styles = StyleSheet.create({
     cardText: {
         fontSize: fontSize.md,
         lineHeight: 22,
+    },
+    socialContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: spacing.lg,
+        gap: spacing.sm,
+    },
+    socialButton: {
+        width: 56,
+        height: 56,
+        borderRadius: borderRadius.round,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
