@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { trackPageView, getAllDocuments } from '../../services/firebase';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function YouTubeScreen({ navigation }) {
     const { theme } = useTheme();
@@ -20,6 +21,7 @@ export default function YouTubeScreen({ navigation }) {
     const loadVideos = async () => {
         try {
             const data = await getAllDocuments('youtubeLinks');
+            console.log('Loaded videos:', data);
             setVideos(data);
         } catch (error) {
             console.error('Error loading videos:', error);
@@ -38,65 +40,106 @@ export default function YouTubeScreen({ navigation }) {
         navigation.navigate('VideoPlayer', { video });
     };
 
-    const renderContentCard = ({ item }) => (
-        <TouchableOpacity
-            style={[styles.contentCard, { backgroundColor: theme.backgroundCard }, shadows.small]}
-            activeOpacity={0.8}
-            onPress={() => handlePlayVideo(item)}
-        >
-            <View style={[styles.thumbnail, { backgroundColor: theme.accent1 }]}>
-                <Ionicons name="play-circle" size={48} color={theme.primary} />
-                <View style={styles.playOverlay}>
-                    <Ionicons name="play" size={24} color="#FFFFFF" />
-                </View>
-            </View>
-            <View style={styles.contentInfo}>
-                <Text style={[styles.contentTitle, { color: theme.text }]} numberOfLines={2}>
-                    {item.title}
-                </Text>
-                {item.description && (
-                    <Text style={[styles.contentDescription, { color: theme.textSecondary }]} numberOfLines={2}>
-                        {item.description}
-                    </Text>
-                )}
-                <View style={styles.contentMeta}>
-                    <View style={styles.metaItem}>
-                        <Ionicons name="logo-youtube" size={14} color="#FF0000" />
-                        <Text style={[styles.metaText, { color: theme.textSecondary }]}>YouTube</Text>
+    // Extract YouTube video ID from URL
+    const getYouTubeVideoId = (url) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
+    const renderVideoCard = ({ item }) => {
+        // Try to get video ID directly from item, or extract from URL
+        const videoUrl = item.url || item.link || item.videoUrl || item.youtubeUrl;
+        const videoId = item.videoId || getYouTubeVideoId(videoUrl);
+
+        const thumbnailUrl = videoId
+            ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+            : null;
+
+        return (
+            <TouchableOpacity
+                style={styles.videoCard}
+                activeOpacity={0.9}
+                onPress={() => handlePlayVideo(item)}
+            >
+                {/* Thumbnail */}
+                <View style={styles.thumbnailContainer}>
+                    {thumbnailUrl ? (
+                        <Image
+                            source={{ uri: thumbnailUrl }}
+                            style={styles.thumbnail}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <View style={[styles.thumbnailPlaceholder, { backgroundColor: theme.accent1 }]}>
+                            <Ionicons name="play-circle" size={60} color={theme.primary} />
+                        </View>
+                    )}
+                    {/* Duration Badge */}
+                    <View style={styles.durationBadge}>
+                        <Text style={styles.durationText}>7:26</Text>
                     </View>
-                    <View style={styles.metaItem}>
-                        <Ionicons name="play-circle" size={14} color={theme.textSecondary} />
-                        <Text style={[styles.metaText, { color: theme.textSecondary }]}>Watch Now</Text>
-                    </View>
                 </View>
+
+                {/* Video Info */}
+                <View style={styles.videoInfo}>
+                    {/* Channel Avatar */}
+                    <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
+                        <Ionicons name="person" size={20} color={theme.textInverse} />
+                    </View>
+
+                    {/* Title and Meta */}
+                    <View style={styles.videoDetails}>
+                        <Text style={[styles.videoTitle, { color: theme.text }]} numberOfLines={2}>
+                            {item.title}
+                        </Text>
+                        <Text style={[styles.videoMeta, { color: theme.textSecondary }]}>
+                            NextGenX • {item.views || '6.7K'} views • {item.uploadTime || '2 days ago'}
+                        </Text>
+                    </View>
+
+                    {/* Menu Button */}
+                    <TouchableOpacity style={styles.menuButton}>
+                        <Ionicons name="ellipsis-vertical" size={20} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
+    if (loading && !refreshing) {
+        return (
+            <View style={[styles.container, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }]}>
+                <LoadingSpinner message="Loading videos..." />
             </View>
-        </TouchableOpacity>
-    );
+        );
+    }
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
-            {/* Header with Gradient */}
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+            {/* Header */}
             <LinearGradient
-                colors={['#FF8C42', '#FFC107']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
                     <View>
-                        <Text style={styles.headerTitle}>CONTENT</Text>
-                        <Text style={styles.headerSubtitle}>Watch and learn</Text>
+                        <Text style={[styles.headerTitle, { color: theme.textInverse }]}>CONTENT</Text>
+                        <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>Watch and learn</Text>
                     </View>
                     <View style={styles.illustrationContainer}>
-                        <Ionicons name="play-circle" size={60} color="#FFFFFF" style={{ opacity: 0.9 }} />
+                        <Ionicons name="play-circle" size={60} color={theme.textInverse} style={{ opacity: 0.9 }} />
                     </View>
                 </View>
             </LinearGradient>
 
-            {/* Content List */}
+            {/* Video List */}
             <FlatList
                 data={videos}
-                renderItem={renderContentCard}
+                renderItem={renderVideoCard}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
@@ -131,7 +174,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         borderBottomLeftRadius: borderRadius.xxl,
         borderBottomRightRadius: borderRadius.xxl,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.sm,
     },
     headerContent: {
         flexDirection: 'row',
@@ -141,12 +184,10 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: fontSize.xxl,
         fontWeight: fontWeight.extrabold,
-        color: '#FFFFFF',
         letterSpacing: 1,
     },
     headerSubtitle: {
         fontSize: fontSize.md,
-        color: '#FFFFFF',
         opacity: 0.9,
         marginTop: spacing.xs,
     },
@@ -157,56 +198,68 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     listContent: {
-        padding: spacing.lg,
+        paddingBottom: 100,
     },
-    contentCard: {
-        flexDirection: 'row',
-        padding: spacing.md,
-        borderRadius: borderRadius.xl,
-        marginBottom: spacing.md,
-        gap: spacing.md,
+    videoCard: {
+        marginBottom: spacing.lg,
+    },
+    thumbnailContainer: {
+        width: '100%',
+        height: 220,
+        position: 'relative',
+        backgroundColor: '#000',
     },
     thumbnail: {
-        width: 120,
-        height: 80,
-        borderRadius: borderRadius.md,
+        width: '100%',
+        height: '100%',
+    },
+    thumbnailPlaceholder: {
+        width: '100%',
+        height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'relative',
     },
-    playOverlay: {
+    durationBadge: {
         position: 'absolute',
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 140, 66, 0.9)',
+        bottom: 8,
+        right: 8,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    durationText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    videoInfo: {
+        flexDirection: 'row',
+        padding: spacing.md,
+        gap: spacing.sm,
+    },
+    avatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    contentInfo: {
+    videoDetails: {
         flex: 1,
-        justifyContent: 'space-between',
     },
-    contentTitle: {
+    videoTitle: {
         fontSize: fontSize.md,
-        fontWeight: fontWeight.bold,
-        marginBottom: spacing.xs,
+        fontWeight: fontWeight.semibold,
+        lineHeight: 20,
+        marginBottom: 4,
     },
-    contentDescription: {
-        fontSize: fontSize.sm,
-        marginBottom: spacing.xs,
-    },
-    contentMeta: {
-        flexDirection: 'row',
-        gap: spacing.md,
-    },
-    metaItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    metaText: {
+    videoMeta: {
         fontSize: fontSize.xs,
+        lineHeight: 16,
+    },
+    menuButton: {
+        padding: 4,
     },
     emptyState: {
         alignItems: 'center',

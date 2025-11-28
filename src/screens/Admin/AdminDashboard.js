@@ -33,20 +33,20 @@ export default function AdminDashboard({ navigation }) {
         >
             {/* Header with Gradient */}
             <LinearGradient
-                colors={['#FF8C42', '#FFC107']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
                     <View>
-                        <Text style={styles.headerTitle}>ADMIN DASHBOARD</Text>
-                        <Text style={styles.headerSubtitle}>
+                        <Text style={[styles.headerTitle, { color: theme.textInverse }]}>ADMIN DASHBOARD</Text>
+                        <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>
                             Welcome, {user?.email || 'Admin'}
                         </Text>
                     </View>
                     <View style={styles.iconContainer}>
-                        <Ionicons name="speedometer" size={50} color="#FFFFFF" />
+                        <Ionicons name="speedometer" size={50} color={theme.textInverse} />
                     </View>
                 </View>
             </LinearGradient>

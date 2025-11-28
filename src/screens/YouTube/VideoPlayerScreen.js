@@ -13,6 +13,22 @@ export default function VideoPlayerScreen({ route, navigation }) {
     const { video } = route.params;
     const [playing, setPlaying] = useState(false);
 
+    // Extract YouTube video ID from URL
+    const getYouTubeVideoId = (url) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
+    // Try to get video ID directly from the video object, or extract from URL
+    const videoUrl = video.url || video.link || video.videoUrl || video.youtubeUrl;
+    const videoId = video.videoId || getYouTubeVideoId(videoUrl);
+
+    console.log('Video data:', video);
+    console.log('Video URL:', videoUrl);
+    console.log('Video ID (direct or extracted):', videoId);
+
     return (
         <ScrollView
             style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}
@@ -20,16 +36,24 @@ export default function VideoPlayerScreen({ route, navigation }) {
         >
             {/* Video Player */}
             <View style={styles.playerContainer}>
-                <YoutubePlayer
-                    height={220}
-                    play={playing}
-                    videoId={video.videoId}
-                    onChangeState={(state) => {
-                        if (state === 'ended') {
-                            setPlaying(false);
-                        }
-                    }}
-                />
+                {videoId ? (
+                    <YoutubePlayer
+                        height={220}
+                        play={playing}
+                        videoId={videoId}
+                        onChangeState={(state) => {
+                            console.log('Player state changed:', state);
+                            if (state === 'ended') {
+                                setPlaying(false);
+                            }
+                        }}
+                    />
+                ) : (
+                    <View style={[styles.playerContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+                        <Ionicons name="alert-circle" size={60} color={theme.textSecondary} />
+                        <Text style={{ color: theme.textSecondary, marginTop: 10 }}>Invalid video URL</Text>
+                    </View>
+                )}
             </View>
 
             {/* Video Info */}
@@ -47,7 +71,10 @@ export default function VideoPlayerScreen({ route, navigation }) {
                 <View style={styles.actions}>
                     <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
-                        onPress={() => setPlaying(!playing)}
+                        onPress={() => {
+                            console.log('Play/Pause button pressed. Current state:', playing);
+                            setPlaying(!playing);
+                        }}
                     >
                         <Ionicons
                             name={playing ? 'pause' : 'play'}
@@ -98,6 +125,7 @@ const styles = StyleSheet.create({
     },
     playerContainer: {
         width: width,
+        height: 220,
         backgroundColor: '#000',
     },
     infoCard: {
@@ -134,6 +162,7 @@ const styles = StyleSheet.create({
     },
     relatedSection: {
         padding: spacing.lg,
+        paddingBottom: 100,
     },
     sectionTitle: {
         fontSize: fontSize.lg,

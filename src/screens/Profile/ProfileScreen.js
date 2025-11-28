@@ -57,7 +57,7 @@ export default function ProfileScreen({ navigation }) {
         >
             {/* Header with Gradient */}
             <LinearGradient
-                colors={['#FFC107', '#FFD54F']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
@@ -65,23 +65,23 @@ export default function ProfileScreen({ navigation }) {
                 <View style={styles.profileSection}>
                     <View style={styles.avatarContainer}>
                         <LinearGradient
-                            colors={['#FF8C42', '#FFB380']}
+                            colors={[theme.primary, theme.primaryLight]}
                             style={styles.avatar}
                         >
-                            <Text style={styles.avatarText}>
+                            <Text style={[styles.avatarText, { color: theme.textInverse }]}>
                                 {userName ? userName.charAt(0).toUpperCase() : 'U'}
                             </Text>
                         </LinearGradient>
                     </View>
-                    <Text style={styles.userName}>{userName || 'User'}</Text>
-                    <Text style={styles.userEmail}>{user?.email || 'Not logged in'}</Text>
+                    <Text style={[styles.userName, { color: theme.textInverse }]}>{userName || 'User'}</Text>
+                    <Text style={[styles.userEmail, { color: theme.textInverse }]}>{user?.email || 'Not logged in'}</Text>
 
                     <TouchableOpacity
-                        style={styles.editButton}
+                        style={[styles.editButton, { backgroundColor: theme.accent }]}
                         onPress={handleEditName}
                     >
-                        <Ionicons name="create" size={16} color="#FFFFFF" />
-                        <Text style={styles.editButtonText}>Edit Profile</Text>
+                        <Ionicons name="create" size={16} color={theme.primary} />
+                        <Text style={[styles.editButtonText, { color: theme.primary }]}>Edit Profile</Text>
                     </TouchableOpacity>
                 </View>
             </LinearGradient>
@@ -90,6 +90,7 @@ export default function ProfileScreen({ navigation }) {
             <View style={styles.optionsContainer}>
                 <TouchableOpacity
                     style={[styles.optionCard, { backgroundColor: theme.backgroundCard }, shadows.small]}
+                    onPress={() => navigation.navigate('Settings')}
                 >
                     <View style={[styles.optionIcon, { backgroundColor: theme.accent3 }]}>
                         <Ionicons name="settings" size={24} color={theme.primary} />

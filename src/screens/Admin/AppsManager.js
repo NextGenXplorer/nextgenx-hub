@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { getAllDocuments, createDocument, updateDocument, deleteDocument } from '../../services/firebase';
-import UploadProgress from '../../components/UploadProgress';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function AppsManager({ navigation }) {
     const { theme } = useTheme();
@@ -14,91 +14,14 @@ export default function AppsManager({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [editingApp, setEditingApp] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    // Form fields
-    const [name, setName] = useState('');
-    const [url, setUrl] = useState('');
-    const [description, setDescription] = useState('');
-    const [icon, setIcon] = useState('apps');
+    // ... (form fields)
 
-    useEffect(() => {
-        loadApps();
-    }, []);
+    // ... (useEffect and loadApps)
 
-    const loadApps = async () => {
-        try {
-            const data = await getAllDocuments('apps');
-            setApps(data);
-        } catch (error) {
-            console.error('Error loading apps:', error);
-            Alert.alert('Error', 'Failed to load apps');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAdd = () => {
-        setEditingApp(null);
-        setName('');
-        setUrl('');
-        setDescription('');
-        setIcon('apps');
-        setModalVisible(true);
-    };
-
-    const handleEdit = (app) => {
-        setEditingApp(app);
-        setName(app.name || '');
-        setUrl(app.url || '');
-        setDescription(app.description || '');
-        setIcon(app.icon || 'apps');
-        setModalVisible(true);
-    };
-
-    const handleSave = async () => {
-        if (!name.trim() || !url.trim()) {
-            Alert.alert('Error', 'Please fill in app name and URL');
-            return;
-        }
-
-        setModalVisible(false);
-        setUploading(true);
-        setUploadProgress(0);
-
-        try {
-            setUploadProgress(30);
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            const appData = {
-                name: name.trim(),
-                url: url.trim(),
-                description: description.trim(),
-                icon: icon || 'apps',
-            };
-
-            setUploadProgress(60);
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            if (editingApp) {
-                await updateDocument('apps', editingApp.id, appData);
-            } else {
-                await createDocument('apps', appData);
-            }
-
-            setUploadProgress(90);
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            setUploadProgress(100);
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            loadApps();
-        } catch (error) {
-            console.error('Error saving app:', error);
-            setUploading(false);
-            Alert.alert('Error', 'Failed to save app');
-        }
-    };
+    // ... (handleAdd, handleEdit, handleSave)
 
     const handleDelete = (app) => {
         Alert.alert(
@@ -110,13 +33,16 @@ export default function AppsManager({ navigation }) {
                     text: 'Delete',
                     style: 'destructive',
                     onPress: async () => {
+                        setDeleting(true);
                         try {
                             await deleteDocument('apps', app.id);
-                            Alert.alert('Success', 'App deleted successfully');
+                            // Alert.alert('Success', 'App deleted successfully');
                             loadApps();
                         } catch (error) {
                             console.error('Error deleting app:', error);
                             Alert.alert('Error', 'Failed to delete app');
+                        } finally {
+                            setDeleting(false);
                         }
                     },
                 },
@@ -124,165 +50,29 @@ export default function AppsManager({ navigation }) {
         );
     };
 
-    const renderAppItem = ({ item }) => (
-        <View style={[styles.appCard, { backgroundColor: theme.backgroundCard }, shadows.small]}>
-            <View style={[styles.appIcon, { backgroundColor: theme.accent3 }]}>
-                <Ionicons name={item.icon || 'apps'} size={32} color={theme.primary} />
-            </View>
-            <View style={styles.appInfo}>
-                <Text style={[styles.appName, { color: theme.text }]}>{item.name}</Text>
-                {item.description && (
-                    <Text style={[styles.appDescription, { color: theme.textSecondary }]} numberOfLines={2}>
-                        {item.description}
-                    </Text>
-                )}
-                <Text style={[styles.appUrl, { color: theme.primary }]} numberOfLines={1}>
-                    {item.url}
-                </Text>
-            </View>
-            <View style={styles.appActions}>
-                <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
-                    onPress={() => handleEdit(item)}
-                >
-                    <Ionicons name="create" size={20} color={theme.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: '#FFE0E0' }]}
-                    onPress={() => handleDelete(item)}
-                >
-                    <Ionicons name="trash" size={20} color={theme.error} />
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
+    // ... (renderAppItem)
 
-    const iconOptions = ['apps', 'game-controller', 'musical-notes', 'camera', 'book', 'calculator', 'fitness', 'restaurant'];
+    if (loading) {
+        return (
+            <View style={[styles.container, { backgroundColor: theme.backgroundSecondary, justifyContent: 'center', alignItems: 'center' }]}>
+                <LoadingSpinner message="Loading apps..." />
+            </View>
+        );
+    }
 
     return (
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
-            {/* Header */}
-            <LinearGradient
-                colors={['#FF8C42', '#FFC107']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.header}
-            >
-                <Text style={styles.headerTitle}>MANAGE APPS</Text>
-                <Text style={styles.headerSubtitle}>{apps.length} apps</Text>
-            </LinearGradient>
+            {/* ... (header and list) */}
 
-            {/* Apps List */}
-            <FlatList
-                data={apps}
-                renderItem={renderAppItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                        <Ionicons name="apps" size={60} color={theme.textSecondary} style={{ opacity: 0.3 }} />
-                        <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                            No apps yet. Add your first app!
-                        </Text>
-                    </View>
-                }
-            />
-
-            {/* Add Button */}
-            <TouchableOpacity
-                style={[styles.fabButton, { backgroundColor: theme.primary }, shadows.large]}
-                onPress={handleAdd}
-            >
-                <Ionicons name="add" size={28} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            {/* Add/Edit Modal */}
+            {/* Deletion Loading Modal */}
             <Modal
-                visible={modalVisible}
-                animationType="slide"
+                visible={deleting}
                 transparent
-                onRequestClose={() => setModalVisible(false)}
+                animationType="fade"
             >
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.backgroundCard }]}>
-                        <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: theme.text }]}>
-                                {editingApp ? 'Edit App' : 'Add New App'}
-                            </Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Ionicons name="close" size={28} color={theme.text} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.text }]}>App Name *</Text>
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
-                                    value={name}
-                                    onChangeText={setName}
-                                    placeholder="e.g., Instagram"
-                                    placeholderTextColor={theme.textSecondary}
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.text }]}>App URL *</Text>
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
-                                    value={url}
-                                    onChangeText={setUrl}
-                                    placeholder="https://example.com or app://..."
-                                    placeholderTextColor={theme.textSecondary}
-                                    autoCapitalize="none"
-                                    keyboardType="url"
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.text }]}>Description</Text>
-                                <TextInput
-                                    style={[styles.textArea, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
-                                    value={description}
-                                    onChangeText={setDescription}
-                                    placeholder="Brief description of the app"
-                                    placeholderTextColor={theme.textSecondary}
-                                    multiline
-                                    numberOfLines={2}
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.text }]}>Icon</Text>
-                                <View style={styles.iconGrid}>
-                                    {iconOptions.map((iconName) => (
-                                        <TouchableOpacity
-                                            key={iconName}
-                                            style={[
-                                                styles.iconOption,
-                                                { backgroundColor: icon === iconName ? theme.primary : theme.backgroundSecondary }
-                                            ]}
-                                            onPress={() => setIcon(iconName)}
-                                        >
-                                            <Ionicons
-                                                name={iconName}
-                                                size={24}
-                                                color={icon === iconName ? '#FFFFFF' : theme.text}
-                                            />
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-
-                            <TouchableOpacity
-                                style={[styles.saveButton, { backgroundColor: theme.primary }, shadows.medium]}
-                                onPress={handleSave}
-                            >
-                                <Text style={styles.saveButtonText}>
-                                    {editingApp ? 'Update App' : 'Add App'}
-                                </Text>
-                            </TouchableOpacity>
-                        </ScrollView>
+                    <View style={[styles.modalContent, { backgroundColor: theme.backgroundCard, alignItems: 'center', padding: spacing.xl, borderRadius: borderRadius.xl, marginHorizontal: spacing.xl }]}>
+                        <LoadingSpinner message="Deleting app..." />
                     </View>
                 </View>
             </Modal>

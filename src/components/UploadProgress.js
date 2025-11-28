@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, Animated, Easing, Dimensions } from 'rea
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, fontSize, fontWeight, borderRadius } from '../theme/colors';
+import { LoadingSpinner } from './LoadingSpinner';
 
 const { width } = Dimensions.get('window');
 
@@ -131,7 +132,7 @@ export default function UploadProgress({ visible, progress = 0, message = 'Uploa
                         <View style={styles.progressContainer}>
                             {progress < 100 ? (
                                 <Animated.View style={{ transform: [{ rotate }] }}>
-                                    <Ionicons name="cloud-upload" size={80} color="#FFFFFF" />
+                                    <LoadingSpinner size={80} color="#FFFFFF" message="" />
                                 </Animated.View>
                             ) : (
                                 <Animated.View style={{ transform: [{ scale: successAnim }] }}>

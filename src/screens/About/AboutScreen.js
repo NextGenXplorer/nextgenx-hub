@@ -1,10 +1,99 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { trackPageView } from '../../services/firebase';
+
+
+const SocialButton = ({ name, icon, color, url, tooltip }) => {
+    const [isPressed, setIsPressed] = useState(false);
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    const handlePressIn = () => {
+        setIsPressed(true);
+        setShowTooltip(true);
+    };
+
+    const handlePressOut = () => {
+        setIsPressed(false);
+        setTimeout(() => setShowTooltip(false), 200);
+    };
+
+    const handlePress = () => {
+        Linking.openURL(url);
+    };
+
+    return (
+        <View style={styles.socialButtonWrapper}>
+            {showTooltip && (
+                <View style={[styles.tooltip, { backgroundColor: color }]}>
+                    <Text style={styles.tooltipText}>{tooltip}</Text>
+                    <View style={[styles.tooltipArrow, { backgroundColor: color }]} />
+                </View>
+            )}
+            <TouchableOpacity
+                style={[
+                    styles.socialIcon,
+                    isPressed && { backgroundColor: color },
+                    shadows.small
+                ]}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                onPress={handlePress}
+                activeOpacity={0.9}
+            >
+                <Ionicons
+                    name={icon}
+                    size={18}
+                    color={isPressed ? '#FFFFFF' : color}
+                />
+            </TouchableOpacity>
+        </View>
+    );
+};
+
+const SocialButtons = () => {
+    const socialData = [
+        {
+            name: 'instagram',
+            icon: 'logo-instagram',
+            color: '#E4405F',
+            url: 'https://www.instagram.com/nexgenxplorerr?igsh=YWV0ZHRuZDZ0M2V3',
+            tooltip: 'Instagram'
+        },
+        {
+            name: 'whatsapp',
+            icon: 'logo-whatsapp',
+            color: '#25D366',
+            url: 'https://whatsapp.com/channel/0029VaU05uG9RZAeiXKyEu06',
+            tooltip: 'WhatsApp'
+        },
+        {
+            name: 'youtube',
+            icon: 'logo-youtube',
+            color: '#FF0000',
+            url: 'https://youtube.com/@nexgenxplorer?si=UG-wBC8UIyeT4bbw',
+            tooltip: 'YouTube'
+        },
+        {
+            name: 'playstore',
+            icon: 'logo-google-playstore',
+            color: '#34A853',
+            url: 'https://play.google.com/store/apps/dev?id=8262374975871504599',
+            tooltip: 'Play Store'
+        }
+    ];
+
+    return (
+        <View style={styles.socialWrapper}>
+            {socialData.map((social) => (
+                <SocialButton key={social.name} {...social} />
+            ))}
+        </View>
+    );
+};
 
 export default function AboutScreen() {
     const { theme } = useTheme();
@@ -20,18 +109,18 @@ export default function AboutScreen() {
         >
             {/* Header with Gradient */}
             <LinearGradient
-                colors={['#FFB380', '#FFD54F']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
                     <View>
-                        <Text style={styles.headerTitle}>ABOUT</Text>
-                        <Text style={styles.headerSubtitle}>Learn more about us</Text>
+                        <Text style={[styles.headerTitle, { color: theme.textInverse }]}>ABOUT</Text>
+                        <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>Learn more about us</Text>
                     </View>
                     <View style={styles.illustrationContainer}>
-                        <Ionicons name="information-circle" size={60} color="#FFFFFF" style={{ opacity: 0.9 }} />
+                        <Ionicons name="information-circle" size={60} color={theme.textInverse} style={{ opacity: 0.9 }} />
                     </View>
                 </View>
             </LinearGradient>
@@ -88,39 +177,7 @@ export default function AboutScreen() {
                         Connect with us on social media
                     </Text>
 
-                    <View style={styles.socialContainer}>
-                        {/* Instagram */}
-                        <TouchableOpacity
-                            style={[styles.socialButton, { backgroundColor: '#E4405F' }, shadows.small]}
-                            onPress={() => Linking.openURL('https://www.instagram.com/nexgenxplorerr?igsh=YWV0ZHRuZDZ0M2V3')}
-                        >
-                            <Ionicons name="logo-instagram" size={28} color="#FFFFFF" />
-                        </TouchableOpacity>
-
-                        {/* WhatsApp */}
-                        <TouchableOpacity
-                            style={[styles.socialButton, { backgroundColor: '#25D366' }, shadows.small]}
-                            onPress={() => Linking.openURL('https://whatsapp.com/channel/0029VaU05uG9RZAeiXKyEu06')}
-                        >
-                            <Ionicons name="logo-whatsapp" size={28} color="#FFFFFF" />
-                        </TouchableOpacity>
-
-                        {/* YouTube */}
-                        <TouchableOpacity
-                            style={[styles.socialButton, { backgroundColor: '#FF0000' }, shadows.small]}
-                            onPress={() => Linking.openURL('https://youtube.com/@nexgenxplorer?si=UG-wBC8UIyeT4bbw')}
-                        >
-                            <Ionicons name="logo-youtube" size={28} color="#FFFFFF" />
-                        </TouchableOpacity>
-
-                        {/* Play Store */}
-                        <TouchableOpacity
-                            style={[styles.socialButton, { backgroundColor: '#34A853' }, shadows.small]}
-                            onPress={() => Linking.openURL('https://play.google.com/store/apps/dev?id=8262374975871504599')}
-                        >
-                            <Ionicons name="logo-google-playstore" size={28} color="#FFFFFF" />
-                        </TouchableOpacity>
-                    </View>
+                    <SocialButtons />
                 </View>
             </View>
         </ScrollView>
@@ -187,17 +244,53 @@ const styles = StyleSheet.create({
         fontSize: fontSize.md,
         lineHeight: 22,
     },
-    socialContainer: {
+    socialWrapper: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: spacing.lg,
-        gap: spacing.sm,
-    },
-    socialButton: {
-        width: 56,
-        height: 56,
-        borderRadius: borderRadius.round,
         justifyContent: 'center',
         alignItems: 'center',
+        marginTop: spacing.xl,
+        paddingTop: spacing.xl,
+        gap: spacing.sm,
+        height: 120,
+    },
+    socialButtonWrapper: {
+        position: 'relative',
+        margin: spacing.sm,
+        width: 50,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    socialIcon: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        transition: 'all 0.2s',
+    },
+    tooltip: {
+        position: 'absolute',
+        top: -45,
+        paddingVertical: 5,
+        paddingHorizontal: 8,
+        borderRadius: 5,
+        zIndex: 10,
+        elevation: 5,
+    },
+    tooltipText: {
+        fontSize: fontSize.sm,
+        color: '#FFFFFF',
+        fontWeight: fontWeight.medium,
+    },
+    tooltipArrow: {
+        position: 'absolute',
+        bottom: -3,
+        left: '50%',
+        marginLeft: -4,
+        width: 8,
+        height: 8,
+        transform: [{ rotate: '45deg' }],
     },
 });

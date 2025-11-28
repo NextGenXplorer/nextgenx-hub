@@ -50,12 +50,12 @@ export default function AppsScreen({ navigation }) {
             onPress={() => handleOpenApp(item)}
         >
             <LinearGradient
-                colors={['#FF8C42', '#FFB380']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.appIconContainer}
             >
-                <Ionicons name={item.icon || 'apps'} size={32} color="#FFFFFF" />
+                <Ionicons name={item.icon || 'apps'} size={32} color={theme.textInverse} />
             </LinearGradient>
             <Text style={[styles.appName, { color: theme.text }]} numberOfLines={1}>
                 {item.name}
@@ -73,18 +73,18 @@ export default function AppsScreen({ navigation }) {
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
             {/* Header with Gradient */}
             <LinearGradient
-                colors={['#FFC107', '#FFD54F']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
                     <View>
-                        <Text style={styles.headerTitle}>APPS</Text>
-                        <Text style={styles.headerSubtitle}>Explore our collection</Text>
+                        <Text style={[styles.headerTitle, { color: theme.textInverse }]}>APPS</Text>
+                        <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>Explore our collection</Text>
                     </View>
                     <View style={styles.illustrationContainer}>
-                        <Ionicons name="apps" size={60} color="#FFFFFF" style={{ opacity: 0.9 }} />
+                        <Ionicons name="apps" size={60} color={theme.textInverse} style={{ opacity: 0.9 }} />
                     </View>
                 </View>
             </LinearGradient>

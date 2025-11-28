@@ -67,23 +67,23 @@ export default function ToolsScreen({ navigation }) {
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
             {/* Header with Gradient */}
             <LinearGradient
-                colors={['#FF8C42', '#FFB380']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
                     <View>
-                        <Text style={styles.headerTitle}>TOOLS</Text>
-                        <Text style={styles.headerSubtitle}>Discover amazing tools</Text>
+                        <Text style={[styles.headerTitle, { color: theme.textInverse }]}>TOOLS</Text>
+                        <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>Discover amazing tools</Text>
                     </View>
                     <View style={styles.illustrationContainer}>
-                        <Ionicons name="construct" size={60} color="#FFFFFF" style={{ opacity: 0.9 }} />
+                        <Ionicons name="construct" size={60} color={theme.textInverse} style={{ opacity: 0.9 }} />
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.searchButton}>
-                    <Ionicons name="search" size={20} color="#FFFFFF" />
+                <TouchableOpacity style={[styles.searchButton, { backgroundColor: theme.accent }]}>
+                    <Ionicons name="search" size={20} color={theme.primary} />
                 </TouchableOpacity>
             </LinearGradient>
 

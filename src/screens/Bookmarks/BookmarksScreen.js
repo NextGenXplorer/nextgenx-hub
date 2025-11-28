@@ -131,18 +131,18 @@ export default function BookmarksScreen({ navigation }) {
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
             {/* Header with Gradient */}
             <LinearGradient
-                colors={['#FF6B6B', '#FF8E8E']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
                     <View>
-                        <Text style={styles.headerTitle}>BOOKMARKS</Text>
-                        <Text style={styles.headerSubtitle}>Your saved items</Text>
+                        <Text style={[styles.headerTitle, { color: theme.textInverse }]}>BOOKMARKS</Text>
+                        <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>Your saved items</Text>
                     </View>
                     <View style={styles.illustrationContainer}>
-                        <Ionicons name="heart" size={60} color="#FFFFFF" style={{ opacity: 0.9 }} />
+                        <Ionicons name="heart" size={60} color={theme.textInverse} style={{ opacity: 0.9 }} />
                     </View>
                 </View>
             </LinearGradient>

@@ -39,17 +39,17 @@ export default function AdminLoginScreen({ navigation }) {
         >
             {/* Header with Gradient */}
             <LinearGradient
-                colors={['#FF8C42', '#FFC107']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
                     <View style={styles.iconContainer}>
-                        <Ionicons name="shield-checkmark" size={60} color="#FFFFFF" />
+                        <Ionicons name="shield-checkmark" size={60} color={theme.textInverse} />
                     </View>
-                    <Text style={styles.headerTitle}>ADMIN LOGIN</Text>
-                    <Text style={styles.headerSubtitle}>Secure access to dashboard</Text>
+                    <Text style={[styles.headerTitle, { color: theme.textInverse }]}>ADMIN LOGIN</Text>
+                    <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>Secure access to dashboard</Text>
                 </View>
             </LinearGradient>
 

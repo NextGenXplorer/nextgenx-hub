@@ -1,5 +1,5 @@
-// NextGenX Vibrant Theme - Orange, Yellow, White
-// Modern, playful, premium design
+// NextGenX Theme System - Multiple Color Schemes
+// Clean, modern design with customizable color themes
 
 export const spacing = {
     xs: 4,
@@ -37,87 +37,277 @@ export const fontWeight = {
     extrabold: '800',
 };
 
-// Vibrant Orange/Yellow Theme
-export const lightTheme = {
-    // Primary Colors - Vibrant Orange
-    primary: '#FF8C42',
-    primaryLight: '#FFB380',
-    primaryDark: '#FF6B00',
+// Theme Definitions
+export const themes = {
+    // Classic Black & White
+    classic: {
+        light: {
+            name: 'Classic Light',
+            primary: '#000000',
+            primaryLight: '#333333',
+            primaryDark: '#000000',
+            accent: '#FFFFFF',
+            accent2: '#F5F5F5',
+            accent3: '#E8E8E8',
+            background: '#FFFFFF',
+            backgroundSecondary: '#F8F8F8',
+            backgroundCard: '#FFFFFF',
+            text: '#000000',
+            textSecondary: '#666666',
+            textInverse: '#FFFFFF',
+            textMuted: '#999999',
+            border: '#E0E0E0',
+            borderLight: '#F0F0F0',
+            borderDark: '#D0D0D0',
+            shadow: 'rgba(0, 0, 0, 0.1)',
+            shadowDark: 'rgba(0, 0, 0, 0.15)',
+            success: '#000000',
+            error: '#000000',
+            warning: '#000000',
+            info: '#000000',
+        },
+        dark: {
+            name: 'Classic Dark',
+            primary: '#FFFFFF',
+            primaryLight: '#CCCCCC',
+            primaryDark: '#FFFFFF',
+            accent: '#000000',
+            accent2: '#1A1A1A',
+            accent3: '#2A2A2A',
+            background: '#000000',
+            backgroundSecondary: '#0A0A0A',
+            backgroundCard: '#121212',
+            text: '#FFFFFF',
+            textSecondary: '#AAAAAA',
+            textInverse: '#000000',
+            textMuted: '#777777',
+            border: '#2A2A2A',
+            borderLight: '#3A3A3A',
+            borderDark: '#1A1A1A',
+            shadow: 'rgba(255, 255, 255, 0.1)',
+            shadowDark: 'rgba(255, 255, 255, 0.15)',
+            success: '#FFFFFF',
+            error: '#FFFFFF',
+            warning: '#FFFFFF',
+            info: '#FFFFFF',
+        },
+    },
 
-    // Secondary Colors - Bright Yellow
-    secondary: '#FFC107',
-    secondaryLight: '#FFD54F',
-    secondaryDark: '#FFA000',
+    // Neon Blue
+    neonBlue: {
+        light: {
+            name: 'Neon Blue Light',
+            primary: '#0066FF',
+            primaryLight: '#3385FF',
+            primaryDark: '#0052CC',
+            accent: '#00D4FF',
+            accent2: '#E6F7FF',
+            accent3: '#CCF0FF',
+            background: '#FFFFFF',
+            backgroundSecondary: '#F5FAFF',
+            backgroundCard: '#FFFFFF',
+            text: '#000000',
+            textSecondary: '#4A5568',
+            textInverse: '#FFFFFF',
+            textMuted: '#718096',
+            border: '#E2E8F0',
+            borderLight: '#EDF2F7',
+            borderDark: '#CBD5E0',
+            shadow: 'rgba(0, 102, 255, 0.1)',
+            shadowDark: 'rgba(0, 102, 255, 0.2)',
+            success: '#00C853',
+            error: '#FF1744',
+            warning: '#FFC400',
+            info: '#0066FF',
+        },
+        dark: {
+            name: 'Neon Blue Dark',
+            primary: '#0066FF',
+            primaryLight: '#3385FF',
+            primaryDark: '#0052CC',
+            accent: '#00D4FF',
+            accent2: '#001A33',
+            accent3: '#002952',
+            background: '#000000',
+            backgroundSecondary: '#0A0F1A',
+            backgroundCard: '#0F1419',
+            text: '#FFFFFF',
+            textSecondary: '#A0AEC0',
+            textInverse: '#000000',
+            textMuted: '#718096',
+            border: '#1A2332',
+            borderLight: '#2D3748',
+            borderDark: '#0F1419',
+            shadow: 'rgba(0, 102, 255, 0.2)',
+            shadowDark: 'rgba(0, 102, 255, 0.3)',
+            success: '#00E676',
+            error: '#FF5252',
+            warning: '#FFD740',
+            info: '#0066FF',
+        },
+    },
 
-    // Backgrounds
-    background: '#FFFFFF',
-    backgroundSecondary: '#FFF9E6', // Light yellow tint
-    backgroundCard: '#FFFFFF',
-    backgroundGradient: 'linear-gradient(135deg, #FF8C42 0%, #FFC107 100%)',
+    // Purple Dream
+    purpleDream: {
+        light: {
+            name: 'Purple Dream Light',
+            primary: '#7C3AED',
+            primaryLight: '#9F67FF',
+            primaryDark: '#6D28D9',
+            accent: '#EC4899',
+            accent2: '#F3E8FF',
+            accent3: '#E9D5FF',
+            background: '#FFFFFF',
+            backgroundSecondary: '#FAF5FF',
+            backgroundCard: '#FFFFFF',
+            text: '#1F2937',
+            textSecondary: '#6B7280',
+            textInverse: '#FFFFFF',
+            textMuted: '#9CA3AF',
+            border: '#E5E7EB',
+            borderLight: '#F3F4F6',
+            borderDark: '#D1D5DB',
+            shadow: 'rgba(124, 58, 237, 0.1)',
+            shadowDark: 'rgba(124, 58, 237, 0.2)',
+            success: '#10B981',
+            error: '#EF4444',
+            warning: '#F59E0B',
+            info: '#7C3AED',
+        },
+        dark: {
+            name: 'Purple Dream Dark',
+            primary: '#A78BFA',
+            primaryLight: '#C4B5FD',
+            primaryDark: '#8B5CF6',
+            accent: '#F472B6',
+            accent2: '#1E1B2E',
+            accent3: '#2E2640',
+            background: '#0F0A1F',
+            backgroundSecondary: '#1A1229',
+            backgroundCard: '#1E1B2E',
+            text: '#F9FAFB',
+            textSecondary: '#D1D5DB',
+            textInverse: '#0F0A1F',
+            textMuted: '#9CA3AF',
+            border: '#2E2640',
+            borderLight: '#3F3654',
+            borderDark: '#1E1B2E',
+            shadow: 'rgba(167, 139, 250, 0.2)',
+            shadowDark: 'rgba(167, 139, 250, 0.3)',
+            success: '#34D399',
+            error: '#F87171',
+            warning: '#FBBF24',
+            info: '#A78BFA',
+        },
+    },
 
-    // Text
-    text: '#2C2C2C',
-    textSecondary: '#757575',
-    textInverse: '#FFFFFF',
-    textOnOrange: '#FFFFFF',
+    // Emerald Green
+    emeraldGreen: {
+        light: {
+            name: 'Emerald Light',
+            primary: '#059669',
+            primaryLight: '#10B981',
+            primaryDark: '#047857',
+            accent: '#34D399',
+            accent2: '#D1FAE5',
+            accent3: '#A7F3D0',
+            background: '#FFFFFF',
+            backgroundSecondary: '#F0FDF4',
+            backgroundCard: '#FFFFFF',
+            text: '#1F2937',
+            textSecondary: '#4B5563',
+            textInverse: '#FFFFFF',
+            textMuted: '#6B7280',
+            border: '#E5E7EB',
+            borderLight: '#F3F4F6',
+            borderDark: '#D1D5DB',
+            shadow: 'rgba(5, 150, 105, 0.1)',
+            shadowDark: 'rgba(5, 150, 105, 0.2)',
+            success: '#059669',
+            error: '#DC2626',
+            warning: '#D97706',
+            info: '#0891B2',
+        },
+        dark: {
+            name: 'Emerald Dark',
+            primary: '#10B981',
+            primaryLight: '#34D399',
+            primaryDark: '#059669',
+            accent: '#6EE7B7',
+            accent2: '#022C22',
+            accent3: '#064E3B',
+            background: '#000000',
+            backgroundSecondary: '#0A1F1A',
+            backgroundCard: '#0F2419',
+            text: '#F9FAFB',
+            textSecondary: '#D1D5DB',
+            textInverse: '#000000',
+            textMuted: '#9CA3AF',
+            border: '#1A3A2E',
+            borderLight: '#2D4A3E',
+            borderDark: '#0F2419',
+            shadow: 'rgba(16, 185, 129, 0.2)',
+            shadowDark: 'rgba(16, 185, 129, 0.3)',
+            success: '#10B981',
+            error: '#EF4444',
+            warning: '#F59E0B',
+            info: '#06B6D4',
+        },
+    },
 
-    // UI Elements
-    border: '#F0F0F0',
-    borderLight: '#F8F8F8',
-    shadow: 'rgba(255, 140, 66, 0.15)',
-    shadowDark: 'rgba(0, 0, 0, 0.08)',
-
-    // Status Colors
-    success: '#4CAF50',
-    error: '#FF5252',
-    warning: '#FFC107',
-    info: '#42A5F5',
-
-    // Accent Colors
-    accent1: '#FFE082', // Light yellow
-    accent2: '#FFAB91', // Light orange
-    accent3: '#FFF3E0', // Very light orange
-};
-
-export const darkTheme = {
-    // Primary Colors
-    primary: '#FF8C42',
-    primaryLight: '#FFB380',
-    primaryDark: '#FF6B00',
-
-    // Secondary Colors
-    secondary: '#FFC107',
-    secondaryLight: '#FFD54F',
-    secondaryDark: '#FFA000',
-
-    // Backgrounds
-    background: '#1A1A1A',
-    backgroundSecondary: '#2C2C2C',
-    backgroundCard: '#242424',
-    backgroundGradient: 'linear-gradient(135deg, #FF8C42 0%, #FFC107 100%)',
-
-    // Text
-    text: '#FFFFFF',
-    textSecondary: '#B0B0B0',
-    textInverse: '#2C2C2C',
-    textOnOrange: '#FFFFFF',
-
-    // UI Elements
-    border: '#3A3A3A',
-    borderLight: '#2C2C2C',
-    shadow: 'rgba(255, 140, 66, 0.2)',
-    shadowDark: 'rgba(0, 0, 0, 0.3)',
-
-    // Status Colors
-    success: '#66BB6A',
-    error: '#EF5350',
-    warning: '#FFC107',
-    info: '#42A5F5',
-
-    // Accent Colors
-    accent1: '#FFE082',
-    accent2: '#FFAB91',
-    accent3: '#FFF3E0',
+    // Sunset Orange
+    sunsetOrange: {
+        light: {
+            name: 'Sunset Light',
+            primary: '#EA580C',
+            primaryLight: '#FB923C',
+            primaryDark: '#C2410C',
+            accent: '#FBBF24',
+            accent2: '#FFF7ED',
+            accent3: '#FFEDD5',
+            background: '#FFFFFF',
+            backgroundSecondary: '#FFFBF5',
+            backgroundCard: '#FFFFFF',
+            text: '#1F2937',
+            textSecondary: '#4B5563',
+            textInverse: '#FFFFFF',
+            textMuted: '#6B7280',
+            border: '#E5E7EB',
+            borderLight: '#F3F4F6',
+            borderDark: '#D1D5DB',
+            shadow: 'rgba(234, 88, 12, 0.1)',
+            shadowDark: 'rgba(234, 88, 12, 0.2)',
+            success: '#16A34A',
+            error: '#DC2626',
+            warning: '#EA580C',
+            info: '#0284C7',
+        },
+        dark: {
+            name: 'Sunset Dark',
+            primary: '#FB923C',
+            primaryLight: '#FDBA74',
+            primaryDark: '#EA580C',
+            accent: '#FCD34D',
+            accent2: '#2A1810',
+            accent3: '#3F2820',
+            background: '#0F0A05',
+            backgroundSecondary: '#1A1210',
+            backgroundCard: '#2A1810',
+            text: '#F9FAFB',
+            textSecondary: '#D1D5DB',
+            textInverse: '#0F0A05',
+            textMuted: '#9CA3AF',
+            border: '#3F2820',
+            borderLight: '#4F3830',
+            borderDark: '#2A1810',
+            shadow: 'rgba(251, 146, 60, 0.2)',
+            shadowDark: 'rgba(251, 146, 60, 0.3)',
+            success: '#22C55E',
+            error: '#EF4444',
+            warning: '#FB923C',
+            info: '#0EA5E9',
+        },
+    },
 };
 
 // Shadow Styles
@@ -130,17 +320,26 @@ export const shadows = {
         elevation: 2,
     },
     medium: {
-        shadowColor: '#FF8C42',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
         elevation: 4,
     },
     large: {
-        shadowColor: '#FF8C42',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.12,
         shadowRadius: 16,
         elevation: 8,
     },
 };
+
+// Helper function to get theme
+export const getTheme = (themeName, isDark) => {
+    const themeData = themes[themeName] || themes.classic;
+    return isDark ? themeData.dark : themeData.light;
+};
+
+// Export theme names for settings
+export const themeNames = Object.keys(themes);

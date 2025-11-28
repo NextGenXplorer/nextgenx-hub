@@ -61,17 +61,17 @@ export default function QRGeneratorScreen() {
         >
             {/* Header with Gradient */}
             <LinearGradient
-                colors={['#FF8C42', '#FFC107']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
                     <View>
-                        <Text style={styles.headerTitle}>QR CODE</Text>
-                        <Text style={styles.headerSubtitle}>Generate QR codes instantly</Text>
+                        <Text style={[styles.headerTitle, { color: theme.textInverse }]}>QR CODE</Text>
+                        <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>Generate QR codes instantly</Text>
                     </View>
-                    <Ionicons name="qr-code" size={60} color="#FFFFFF" style={{ opacity: 0.9 }} />
+                    <Ionicons name="qr-code" size={60} color={theme.textInverse} style={{ opacity: 0.9 }} />
                 </View>
             </LinearGradient>
 

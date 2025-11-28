@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { getAllDocuments, createDocument, updateDocument, deleteDocument } from '../../services/firebase';
 import UploadProgress from '../../components/UploadProgress';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function YouTubeManager({ navigation }) {
     const { theme } = useTheme();
@@ -14,6 +15,7 @@ export default function YouTubeManager({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [editingVideo, setEditingVideo] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
     // Form fields
@@ -125,13 +127,16 @@ export default function YouTubeManager({ navigation }) {
                     text: 'Delete',
                     style: 'destructive',
                     onPress: async () => {
+                        setDeleting(true);
                         try {
                             await deleteDocument('youtubeLinks', video.id);
-                            Alert.alert('Success', 'Video deleted successfully');
+                            // Alert.alert('Success', 'Video deleted successfully');
                             loadVideos();
                         } catch (error) {
                             console.error('Error deleting video:', error);
                             Alert.alert('Error', 'Failed to delete video');
+                        } finally {
+                            setDeleting(false);
                         }
                     },
                 },
@@ -172,17 +177,25 @@ export default function YouTubeManager({ navigation }) {
         </View>
     );
 
+    if (loading) {
+        return (
+            <View style={[styles.container, { backgroundColor: theme.backgroundSecondary, justifyContent: 'center', alignItems: 'center' }]}>
+                <LoadingSpinner message="Loading videos..." />
+            </View>
+        );
+    }
+
     return (
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
             {/* Header */}
             <LinearGradient
-                colors={['#FFC107', '#FFD54F']}
+                colors={[theme.primary, theme.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
-                <Text style={styles.headerTitle}>MANAGE VIDEOS</Text>
-                <Text style={styles.headerSubtitle}>{videos.length} videos</Text>
+                <Text style={[styles.headerTitle, { color: theme.textInverse }]}>MANAGE VIDEOS</Text>
+                <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>{videos.length} videos</Text>
             </LinearGradient>
 
             {/* Videos List */}
@@ -277,6 +290,19 @@ export default function YouTubeManager({ navigation }) {
                                 </Text>
                             </TouchableOpacity>
                         </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Deletion Loading Modal */}
+            <Modal
+                visible={deleting}
+                transparent
+                animationType="fade"
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.backgroundCard, alignItems: 'center', padding: spacing.xl, borderRadius: borderRadius.xl, marginHorizontal: spacing.xl }]}>
+                        <LoadingSpinner message="Deleting video..." />
                     </View>
                 </View>
             </Modal>

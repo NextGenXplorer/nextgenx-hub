@@ -1,162 +1,100 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Svg, { Polyline } from 'react-native-svg';
 import { useTheme } from '../context/ThemeContext';
-import { spacing, fontSize, fontWeight, borderRadius } from '../theme/colors';
+import { spacing, fontSize, fontWeight } from '../theme/colors';
 
-export const LoadingSpinner = ({ message = 'Loading...', type = 'general' }) => {
+const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
+
+export const LoadingSpinner = ({ message = 'Loading...', size = 48, color }) => {
     const { theme } = useTheme();
-    const spinValue = useRef(new Animated.Value(0)).current;
-    const pulseValue = useRef(new Animated.Value(1)).current;
-    const dotOpacity1 = useRef(new Animated.Value(0)).current;
-    const dotOpacity2 = useRef(new Animated.Value(0)).current;
-    const dotOpacity3 = useRef(new Animated.Value(0)).current;
+    const strokeColor = color || theme.primary;
+    const dashOffset = useRef(new Animated.Value(192)).current;
+    const opacity = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        // Spin animation
-        Animated.loop(
-            Animated.timing(spinValue, {
-                toValue: 1,
-                duration: 2000,
-                easing: Easing.linear,
-                useNativeDriver: true,
-            })
-        ).start();
+        const animate = () => {
+            Animated.loop(
+                Animated.parallel([
+                    // Stroke Dash Offset Animation: 192 -> 0 over 1.4s
+                    Animated.timing(dashOffset, {
+                        toValue: 0,
+                        duration: 1400,
+                        easing: Easing.linear,
+                        useNativeDriver: true,
+                    }),
+                    // Opacity Animation: 1 -> 0 over first 72.5% (approx 1015ms)
+                    Animated.sequence([
+                        Animated.timing(opacity, {
+                            toValue: 0,
+                            duration: 1015, // 72.5% of 1400
+                            easing: Easing.linear,
+                            useNativeDriver: true,
+                        }),
+                        Animated.timing(opacity, {
+                            toValue: 0,
+                            duration: 385, // Remaining time
+                            useNativeDriver: true,
+                        }),
+                    ]),
+                ])
+            ).start();
+        };
 
-        // Pulse animation
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(pulseValue, {
-                    toValue: 1.2,
-                    duration: 800,
-                    easing: Easing.inOut(Easing.ease),
-                    useNativeDriver: true,
-                }),
-                Animated.timing(pulseValue, {
-                    toValue: 1,
-                    duration: 800,
-                    easing: Easing.inOut(Easing.ease),
-                    useNativeDriver: true,
-                }),
-            ])
-        ).start();
-
-        // Dot animation
-        const dotAnimation = Animated.loop(
-            Animated.stagger(300, [
-                Animated.sequence([
-                    Animated.timing(dotOpacity1, { toValue: 1, duration: 300, useNativeDriver: true }),
-                    Animated.timing(dotOpacity1, { toValue: 0, duration: 300, useNativeDriver: true }),
-                ]),
-                Animated.sequence([
-                    Animated.timing(dotOpacity2, { toValue: 1, duration: 300, useNativeDriver: true }),
-                    Animated.timing(dotOpacity2, { toValue: 0, duration: 300, useNativeDriver: true }),
-                ]),
-                Animated.sequence([
-                    Animated.timing(dotOpacity3, { toValue: 1, duration: 300, useNativeDriver: true }),
-                    Animated.timing(dotOpacity3, { toValue: 0, duration: 300, useNativeDriver: true }),
-                ]),
-            ])
-        );
-        dotAnimation.start();
+        animate();
     }, []);
 
-    const spin = spinValue.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg'],
-    });
-
-    const getGradientColors = () => {
-        switch (type) {
-            case 'tool':
-                return ['#FF8C42', '#FFB380'];
-            case 'app':
-                return ['#FFC107', '#FFD54F'];
-            case 'video':
-                return ['#FF8C42', '#FFC107'];
-            default:
-                return [theme.primary, theme.accent1];
-        }
-    };
-
-    const getIcon = () => {
-        switch (type) {
-            case 'tool':
-                return 'construct';
-            case 'app':
-                return 'apps';
-            case 'video':
-                return 'play-circle';
-            default:
-                return 'hourglass';
-        }
-    };
+    // Points for the polyline shape
+    const points = "12 2 12 22 22 12 2 12";
 
     return (
         <View style={styles.container}>
-            <LinearGradient
-                colors={getGradientColors()}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradientBackground}
-            >
-                <Animated.View
-                    style={[
-                        styles.iconContainer,
-                        {
-                            transform: [{ rotate: spin }, { scale: pulseValue }],
-                        },
-                    ]}
-                >
-                    <Ionicons name={getIcon()} size={60} color="#FFFFFF" />
-                </Animated.View>
+            <View style={{ width: size, height: size }}>
+                <Svg width={size} height={size} viewBox="0 0 24 24">
+                    {/* Background Polyline (Static) */}
+                    <Polyline
+                        points={points}
+                        fill="none"
+                        stroke={`${strokeColor}33`} // 20% opacity approx
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
 
-                <Text style={styles.message}>{message}</Text>
+                    {/* Foreground Polyline (Animated) */}
+                    <AnimatedPolyline
+                        points={points}
+                        fill="none"
+                        stroke={strokeColor}
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeDasharray={[48, 144]}
+                        strokeDashoffset={dashOffset}
+                        opacity={opacity}
+                    />
+                </Svg>
+            </View>
 
-                <View style={styles.dotsContainer}>
-                    <Animated.View style={[styles.dot, { opacity: dotOpacity1 }]} />
-                    <Animated.View style={[styles.dot, { opacity: dotOpacity2 }]} />
-                    <Animated.View style={[styles.dot, { opacity: dotOpacity3 }]} />
-                </View>
-            </LinearGradient>
+            {message && (
+                <Text style={[styles.message, { color: theme.textSecondary }]}>
+                    {message}
+                </Text>
+            )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    gradientBackground: {
-        width: 200,
-        height: 200,
-        borderRadius: borderRadius.xxl,
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.lg,
     },
-    iconContainer: {
-        marginBottom: spacing.md,
-    },
     message: {
-        fontSize: fontSize.md,
-        fontWeight: fontWeight.semibold,
-        color: '#FFFFFF',
-        textAlign: 'center',
-        marginTop: spacing.sm,
-    },
-    dotsContainer: {
-        flexDirection: 'row',
         marginTop: spacing.md,
-        gap: spacing.xs,
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#FFFFFF',
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.medium,
+        textAlign: 'center',
     },
 });

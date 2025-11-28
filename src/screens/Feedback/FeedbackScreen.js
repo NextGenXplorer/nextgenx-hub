@@ -27,17 +27,17 @@ export default function FeedbackScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Header with Gradient */}
                 <LinearGradient
-                    colors={['#FF8C42', '#FFB380']}
+                    colors={[theme.primary, theme.primaryLight]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.header}
                 >
                     <View style={styles.headerContent}>
                         <View>
-                            <Text style={styles.headerTitle}>FEEDBACK</Text>
-                            <Text style={styles.headerSubtitle}>We'd love to hear from you</Text>
+                            <Text style={[styles.headerTitle, { color: theme.textInverse }]}>FEEDBACK</Text>
+                            <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>We'd love to hear from you</Text>
                         </View>
-                        <Ionicons name="chatbubbles" size={60} color="#FFFFFF" style={{ opacity: 0.9 }} />
+                        <Ionicons name="chatbubbles" size={60} color={theme.textInverse} style={{ opacity: 0.9 }} />
                     </View>
                 </LinearGradient>
 
