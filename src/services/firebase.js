@@ -1,94 +1,79 @@
-import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    updateProfile as updateFirebaseProfile
-} from 'firebase/auth';
-import {
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    where,
-    serverTimestamp
-} from 'firebase/firestore';
+import firebase from 'firebase/compat/app';
 import { auth, db } from '../firebaseConfig';
 
 // Authentication
 export const registerUser = async (email, password, displayName) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await updateFirebaseProfile(userCredential.user, { displayName });
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    await userCredential.user.updateProfile({ displayName });
 
-    await setDoc(doc(db, 'users', userCredential.user.uid), {
+    await db.collection('users').doc(userCredential.user.uid).set({
         displayName,
         email,
-        createdAt: serverTimestamp(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
     return userCredential.user;
 };
 
 export const loginUser = async (email, password) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
     return userCredential.user;
 };
 
 export const logoutUser = async () => {
-    await signOut(auth);
+    await auth.signOut();
 };
 
 export const updateProfile = async (userId, data) => {
-    await updateDoc(doc(db, 'users', userId), data);
+    await db.collection('users').doc(userId).update(data);
 };
 
 // Firestore CRUD
 export const createDocument = async (collectionName, data) => {
-    const docRef = doc(collection(db, collectionName));
-    await setDoc(docRef, { ...data, createdAt: serverTimestamp() });
+    const docRef = await db.collection(collectionName).add({
+        ...data,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
     return docRef.id;
 };
 
 export const getDocument = async (collectionName, docId) => {
-    const docRef = doc(db, collectionName, docId);
-    const docSnap = await getDoc(docRef);
-    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+    const docSnap = await db.collection(collectionName).doc(docId).get();
+    return docSnap.exists ? { id: docSnap.id, ...docSnap.data() } : null;
 };
 
 export const getAllDocuments = async (collectionName) => {
-    const querySnapshot = await getDocs(collection(db, collectionName));
+    const querySnapshot = await db.collection(collectionName).get();
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
 export const updateDocument = async (collectionName, docId, data) => {
-    await updateDoc(doc(db, collectionName, docId), data);
+    await db.collection(collectionName).doc(docId).update(data);
 };
 
 export const deleteDocument = async (collectionName, docId) => {
-    await deleteDoc(doc(db, collectionName, docId));
+    await db.collection(collectionName).doc(docId).delete();
 };
 
 // Bookmarks
 export const getUserBookmarks = async (userId) => {
-    const q = query(collection(db, 'bookmarks'), where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await db.collection('bookmarks')
+        .where('userId', '==', userId)
+        .get();
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
 export const addBookmark = async (userId, itemId, itemType) => {
-    await setDoc(doc(db, 'bookmarks', `${userId}_${itemId}`), {
+    await db.collection('bookmarks').doc(`${userId}_${itemId}`).set({
         userId,
         itemId,
         itemType,
-        createdAt: serverTimestamp(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 };
 
 export const removeBookmark = async (userId, itemId) => {
-    await deleteDoc(doc(db, 'bookmarks', `${userId}_${itemId}`));
+    await db.collection('bookmarks').doc(`${userId}_${itemId}`).delete();
 };
 
 // Analytics

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { spacing, borderRadius, shadows } from '../theme/colors';
 
@@ -10,7 +11,7 @@ const navItems = [
     { id: 'home', label: 'Home', icon: 'home', screen: 'Home' },
     { id: 'tools', label: 'Tools', icon: 'construct', screen: 'Tools' },
     { id: 'apps', label: 'Apps', icon: 'apps', screen: 'Apps' },
-    { id: 'qr', label: 'QR Code', icon: 'qr-code', screen: 'QRGenerator' },
+    { id: 'qr', label: 'QR', icon: 'qr-code', screen: 'QRGenerator' },
     { id: 'youtube', label: 'Videos', icon: 'play-circle', screen: 'YouTube' },
     { id: 'profile', label: 'Profile', icon: 'person', screen: 'Profile' },
 ];
@@ -69,7 +70,7 @@ export default function BottomNavigation({ navigation, currentScreen }) {
                     // Interpolate label width
                     const labelWidth = animValue.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [0, 60],
+                        outputRange: [0, 50],
                     });
 
                     return (
@@ -146,10 +147,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 12,
+        paddingHorizontal: 8,
         paddingVertical: 10,
         borderRadius: 20,
-        minWidth: 44,
+        minWidth: 40,
         minHeight: 40,
         maxHeight: 44,
         position: 'relative',

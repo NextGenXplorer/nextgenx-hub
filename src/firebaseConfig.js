@@ -1,8 +1,7 @@
 // Firebase Configuration - NextGenX
-import { initializeApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
 
 // Firebase configuration using environment variables
 const firebaseConfig = {
@@ -14,20 +13,17 @@ const firebaseConfig = {
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase (check if already initialized)
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
-// Initialize Auth with AsyncStorage persistence for React Native
-export const auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-});
-
-// Initialize Firestore
-export const db = getFirestore(app);
+// Export auth and db
+export const auth = firebase.auth();
+export const db = firebase.firestore();
 
 // Analytics and Messaging are not supported in React Native web/Expo Go
-// They will be initialized only when running on actual devices
 export const analytics = null;
 export const messaging = null;
 
-export default app;
+export default firebase;

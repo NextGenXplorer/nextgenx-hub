@@ -187,7 +187,7 @@ export default function SettingsScreen() {
                                     <View
                                         style={[
                                             styles.themeColorBox,
-                                            { backgroundColor: isDark ? option.darkColor : option.lightColor }
+                                            { backgroundColor: option.darkColor }
                                         ]}
                                     >
                                         <Ionicons name={option.icon} size={24} color="#FFFFFF" />

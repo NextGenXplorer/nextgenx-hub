@@ -1,22 +1,57 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { logoutUser } from '../../services/firebase';
+import { clearAdminSession, getSessionInfo, extendAdminSession } from '../../utils/adminSession';
 
 export default function AdminDashboard({ navigation }) {
     const { theme } = useTheme();
     const { user } = useAuth();
+    const [sessionInfo, setSessionInfo] = useState(null);
+
+    useEffect(() => {
+        loadSessionInfo();
+    }, []);
+
+    const loadSessionInfo = async () => {
+        const info = await getSessionInfo();
+        setSessionInfo(info);
+    };
 
     const handleLogout = async () => {
-        try {
-            await logoutUser();
-            navigation.replace('Home');
-        } catch (error) {
-            console.error('Logout error:', error);
+        Alert.alert(
+            'Logout',
+            'Are you sure you want to logout? You will need to login again.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Logout',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await clearAdminSession();
+                            await logoutUser();
+                            navigation.replace('Home');
+                        } catch (error) {
+                            console.error('Logout error:', error);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleExtendSession = async () => {
+        const success = await extendAdminSession();
+        if (success) {
+            Alert.alert('Session Extended', 'Your session has been extended for another 7 days.');
+            loadSessionInfo();
+        } else {
+            Alert.alert('Error', 'Failed to extend session.');
         }
     };
 
@@ -24,6 +59,7 @@ export default function AdminDashboard({ navigation }) {
         { id: 'tools', title: 'Manage Tools', icon: 'construct', screen: 'ToolsManager', color: '#FF8C42' },
         { id: 'youtube', title: 'Manage Videos', icon: 'play-circle', screen: 'YouTubeManager', color: '#FFC107' },
         { id: 'apps', title: 'Manage Apps', icon: 'apps', screen: 'AppsManager', color: '#FF8C42' },
+        { id: 'feedback', title: 'View Feedback', icon: 'chatbubbles', screen: 'FeedbackManager', color: '#10B981' },
     ];
 
     return (
@@ -70,6 +106,27 @@ export default function AdminDashboard({ navigation }) {
                         <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
                     </TouchableOpacity>
                 ))}
+
+                {/* Session Info */}
+                {sessionInfo && (
+                    <>
+                        <Text style={[styles.sectionTitle, { color: theme.text }]}>Session Info</Text>
+                        <View style={[styles.sessionCard, { backgroundColor: theme.backgroundCard }, shadows.small]}>
+                            <View style={styles.sessionRow}>
+                                <Ionicons name="time" size={20} color={theme.primary} />
+                                <Text style={[styles.sessionLabel, { color: theme.textSecondary }]}>Expires in:</Text>
+                                <Text style={[styles.sessionValue, { color: theme.text }]}>{sessionInfo.remainingTime}</Text>
+                            </View>
+                            <TouchableOpacity
+                                style={[styles.extendButton, { backgroundColor: theme.accent3 }]}
+                                onPress={handleExtendSession}
+                            >
+                                <Ionicons name="refresh" size={18} color={theme.primary} />
+                                <Text style={[styles.extendButtonText, { color: theme.primary }]}>Extend Session</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </>
+                )}
 
                 {/* Quick Actions */}
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>Quick Actions</Text>
@@ -221,5 +278,37 @@ const styles = StyleSheet.create({
     logoutText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
+    },
+    sessionCard: {
+        padding: spacing.md,
+        borderRadius: borderRadius.lg,
+        marginBottom: spacing.md,
+    },
+    sessionRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginBottom: spacing.md,
+    },
+    sessionLabel: {
+        fontSize: fontSize.sm,
+    },
+    sessionValue: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.bold,
+        flex: 1,
+        textAlign: 'right',
+    },
+    extendButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.sm,
+        borderRadius: borderRadius.md,
+        gap: spacing.xs,
+    },
+    extendButtonText: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.semibold,
     },
 });

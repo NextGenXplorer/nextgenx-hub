@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Share, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import ViewShot from 'react-native-view-shot';
-import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export default function QRGeneratorScreen() {
     const { theme } = useTheme();
@@ -23,20 +23,25 @@ export default function QRGeneratorScreen() {
 
     const handleSaveQR = async () => {
         try {
-            // Request permission
-            const { status } = await MediaLibrary.requestPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Please grant permission to save images to your gallery.');
-                return;
-            }
-
             // Capture the QR code
             const uri = await viewShotRef.current.capture();
 
-            // Save to gallery
-            await MediaLibrary.saveToLibraryAsync(uri);
+            // Copy to a permanent location
+            const filename = `QRCode_${Date.now()}.png`;
+            const newUri = FileSystem.documentDirectory + filename;
+            await FileSystem.copyAsync({ from: uri, to: newUri });
 
-            Alert.alert('Success', 'QR Code saved to gallery!');
+            // Check if sharing is available
+            const isAvailable = await Sharing.isAvailableAsync();
+            if (isAvailable) {
+                // Share the image - user can save from share menu
+                await Sharing.shareAsync(newUri, {
+                    mimeType: 'image/png',
+                    dialogTitle: 'Save QR Code',
+                });
+            } else {
+                Alert.alert('Success', `QR Code saved to: ${newUri}`);
+            }
         } catch (error) {
             console.error('Error saving QR code:', error);
             Alert.alert('Error', 'Failed to save QR code. Please try again.');
@@ -45,12 +50,21 @@ export default function QRGeneratorScreen() {
 
     const handleShareQR = async () => {
         try {
-            await Share.share({
-                message: `QR Code Content: ${generatedUrl}`,
-                title: 'Share QR Code',
-            });
+            // Capture the QR code as image
+            const uri = await viewShotRef.current.capture();
+
+            const isAvailable = await Sharing.isAvailableAsync();
+            if (isAvailable) {
+                await Sharing.shareAsync(uri, {
+                    mimeType: 'image/png',
+                    dialogTitle: 'Share QR Code',
+                });
+            } else {
+                Alert.alert('Info', `QR Code Content: ${generatedUrl}`);
+            }
         } catch (error) {
             console.error('Error sharing:', error);
+            Alert.alert('Error', 'Failed to share QR code.');
         }
     };
 
@@ -177,7 +191,7 @@ const styles = StyleSheet.create({
     content: {
         padding: spacing.lg,
         gap: spacing.lg,
-        paddingBottom: 100, // Extra padding to avoid bottom nav overlap
+        paddingBottom: 120, // Extra padding to avoid bottom nav overlap
     },
     inputCard: {
         padding: spacing.lg,

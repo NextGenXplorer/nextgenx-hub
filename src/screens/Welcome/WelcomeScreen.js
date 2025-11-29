@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingVi
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { useTheme } from '../../context/ThemeContext';
+import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 
 export default function WelcomeScreen({ onComplete }) {
     const { theme } = useTheme();
@@ -35,7 +35,7 @@ export default function WelcomeScreen({ onComplete }) {
             >
                 <View style={styles.content}>
                     {/* Welcome Icon */}
-                    <View style={styles.iconContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
                         <Ionicons name="hand-right" size={80} color={theme.textInverse} />
                     </View>
 
@@ -44,12 +44,19 @@ export default function WelcomeScreen({ onComplete }) {
                     <Text style={[styles.subtitle, { color: theme.textInverse }]}>Let's get to know you better</Text>
 
                     {/* Name Input Card */}
-                    <View style={[styles.inputCard, shadows.large]}>
+                    <View style={[
+                        styles.inputCard,
+                        shadows.large,
+                        { backgroundColor: theme.backgroundCard }
+                    ]}>
                         <Text style={[styles.label, { color: theme.text }]}>What's your name?</Text>
-                        <View style={styles.inputWrapper}>
+                        <View style={[
+                            styles.inputWrapper,
+                            { backgroundColor: theme.backgroundSecondary }
+                        ]}>
                             <Ionicons name="person" size={24} color={theme.primary} />
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: theme.text }]}
                                 value={name}
                                 onChangeText={setName}
                                 placeholder="Enter your name"
@@ -111,7 +118,6 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.xl,
@@ -129,7 +135,6 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xxl,
     },
     inputCard: {
-        backgroundColor: '#FFFFFF',
         borderRadius: borderRadius.xl,
         padding: spacing.xl,
         marginBottom: spacing.xl,
@@ -142,7 +147,6 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
         borderRadius: borderRadius.lg,
         paddingHorizontal: spacing.md,
         marginBottom: spacing.lg,
@@ -152,7 +156,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: fontSize.lg,
         paddingVertical: spacing.md,
-        color: '#2C2C2C',
     },
     continueButton: {
         flexDirection: 'row',
