@@ -155,6 +155,43 @@ export default function AboutScreen() {
                     <Text style={[styles.cardText, { color: theme.textSecondary }]}>
                         A passionate group of developers, designers, and creators dedicated to excellence.
                     </Text>
+
+                    {/* Team Members */}
+                    <View style={styles.teamMembers}>
+                        <TouchableOpacity
+                            style={styles.teamMember}
+                            onPress={() => Linking.openURL('https://www.instagram.com/appu_kannadigaa?utm_source=qr&igsh=Nmxjbm8zb3Q1NGk4')}
+                        >
+                            <View style={[styles.memberAvatar, { backgroundColor: theme.accent3 }]}>
+                                <Ionicons name="person" size={20} color={theme.primary} />
+                            </View>
+                            <View style={styles.memberInfo}>
+                                <Text style={[styles.memberName, { color: theme.text }]}>Manvanth Gowda M</Text>
+                                <View style={styles.instagramLink}>
+                                    <Ionicons name="logo-instagram" size={14} color="#E4405F" />
+                                    <Text style={[styles.memberHandle, { color: theme.textSecondary }]}>@appu_kannadigaa</Text>
+                                </View>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.teamMember}
+                            onPress={() => Linking.openURL('https://www.instagram.com/mithun.gowda.b?igsh=MWJmODFpZDA1Z3hhZg==')}
+                        >
+                            <View style={[styles.memberAvatar, { backgroundColor: theme.accent3 }]}>
+                                <Ionicons name="person" size={20} color={theme.primary} />
+                            </View>
+                            <View style={styles.memberInfo}>
+                                <Text style={[styles.memberName, { color: theme.text }]}>Mithun Gowda B</Text>
+                                <View style={styles.instagramLink}>
+                                    <Ionicons name="logo-instagram" size={14} color="#E4405F" />
+                                    <Text style={[styles.memberHandle, { color: theme.textSecondary }]}>@mithun.gowda.b</Text>
+                                </View>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: theme.backgroundCard }, shadows.small]}>
@@ -163,8 +200,15 @@ export default function AboutScreen() {
                     </View>
                     <Text style={[styles.cardTitle, { color: theme.text }]}>Contact Us</Text>
                     <Text style={[styles.cardText, { color: theme.textSecondary }]}>
-                        Have questions? Reach out to us at hello@nextgenx.com
+                        Have questions? Reach out to us
                     </Text>
+                    <TouchableOpacity
+                        style={styles.emailButton}
+                        onPress={() => Linking.openURL('mailto:nxgextra@gmail.com')}
+                    >
+                        <Ionicons name="mail-outline" size={18} color={theme.primary} />
+                        <Text style={[styles.emailText, { color: theme.primary }]}>nxgextra@gmail.com</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Social Media Section */}
@@ -292,5 +336,50 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         transform: [{ rotate: '45deg' }],
+    },
+    teamMembers: {
+        marginTop: spacing.lg,
+        gap: spacing.sm,
+    },
+    teamMember: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.md,
+        borderRadius: borderRadius.md,
+        gap: spacing.sm,
+    },
+    memberAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    memberInfo: {
+        flex: 1,
+    },
+    memberName: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
+        marginBottom: 2,
+    },
+    instagramLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    memberHandle: {
+        fontSize: fontSize.sm,
+    },
+    emailButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginTop: spacing.md,
+        padding: spacing.sm,
+    },
+    emailText: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
     },
 });

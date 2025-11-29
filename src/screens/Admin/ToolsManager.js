@@ -223,6 +223,5 @@ const styles = StyleSheet.create({
     saveButtonText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#FFFFFF',
     },
 });

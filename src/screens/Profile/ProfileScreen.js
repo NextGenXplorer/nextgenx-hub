@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { getBookmarkCount } from '../../services/bookmarkService';
+import { logoutUser } from '../../services/firebase';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function ProfileScreen({ navigation }) {
@@ -48,6 +49,15 @@ export default function ProfileScreen({ navigation }) {
     const handleEditName = async () => {
         // You can add a modal or navigate to edit screen here
         console.log('Edit name');
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logoutUser();
+            navigation.replace('Home');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     };
 
     return (
@@ -149,9 +159,10 @@ export default function ProfileScreen({ navigation }) {
                 {user && (
                     <TouchableOpacity
                         style={[styles.logoutButton, { backgroundColor: theme.error }, shadows.medium]}
+                        onPress={handleLogout}
                     >
-                        <Ionicons name="log-out" size={20} color="#FFFFFF" />
-                        <Text style={styles.logoutText}>Logout</Text>
+                        <Ionicons name="log-out" size={20} color={theme.textInverse} />
+                        <Text style={[styles.logoutText, { color: theme.textInverse }]}>Logout</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -220,6 +231,7 @@ const styles = StyleSheet.create({
     optionsContainer: {
         padding: spacing.lg,
         gap: spacing.md,
+        paddingBottom: 100, // Extra padding to avoid bottom nav overlap
     },
     optionCard: {
         flexDirection: 'row',
@@ -265,6 +277,5 @@ const styles = StyleSheet.create({
     logoutText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#FFFFFF',
     },
 });

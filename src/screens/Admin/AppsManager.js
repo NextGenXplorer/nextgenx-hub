@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Modal, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Modal, Alert, ScrollView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { getAllDocuments, createDocument, updateDocument, deleteDocument } from '../../services/firebase';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import UploadProgress from '../../components/UploadProgress';
+import { extractPlayStoreIcon, isPlayStoreUrl, extractPackageName } from '../../utils/extractPlayStoreIcon';
 
 export default function AppsManager({ navigation }) {
     const { theme } = useTheme();
@@ -16,12 +19,151 @@ export default function AppsManager({ navigation }) {
     const [uploading, setUploading] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [extractingIcon, setExtractingIcon] = useState(false);
 
-    // ... (form fields)
+    // Form fields
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [url, setUrl] = useState('');
+    const [iconUrl, setIconUrl] = useState('');
+    const [selectedIcon, setSelectedIcon] = useState('apps');
 
-    // ... (useEffect and loadApps)
+    const iconOptions = [
+        'apps', 'game-controller', 'musical-notes', 'camera', 'cart',
+        'fitness', 'book', 'restaurant', 'car', 'airplane',
+        'heart', 'chatbubbles', 'mail', 'calendar', 'calculator'
+    ];
 
-    // ... (handleAdd, handleEdit, handleSave)
+    useEffect(() => {
+        loadApps();
+    }, []);
+
+    // Auto-extract icon when URL changes
+    useEffect(() => {
+        if (url && isPlayStoreUrl(url)) {
+            handleAutoExtractIcon();
+        }
+    }, [url]);
+
+    const loadApps = async () => {
+        try {
+            const data = await getAllDocuments('apps');
+            setApps(data);
+        } catch (error) {
+            console.error('Error loading apps:', error);
+            Alert.alert('Error', 'Failed to load apps');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAutoExtractIcon = async () => {
+        setExtractingIcon(true);
+        try {
+            const extractedIconUrl = await extractPlayStoreIcon(url);
+            if (extractedIconUrl) {
+                setIconUrl(extractedIconUrl);
+                Alert.alert('Success', 'App icon automatically extracted from Play Store!');
+            } else {
+                Alert.alert('Info', 'Could not auto-extract icon. You can select an icon or upload manually.');
+            }
+        } catch (error) {
+            console.error('Error extracting icon:', error);
+        } finally {
+            setExtractingIcon(false);
+        }
+    };
+
+    const handlePickImage = async () => {
+        try {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Please grant permission to access your photos.');
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+                // For now, we'll use the local URI
+                // In production, you'd upload this to Firebase Storage
+                setIconUrl(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Error', 'Failed to pick image');
+        }
+    };
+
+    const handleAdd = () => {
+        setEditingApp(null);
+        setName('');
+        setDescription('');
+        setUrl('');
+        setIconUrl('');
+        setSelectedIcon('apps');
+        setModalVisible(true);
+    };
+
+    const handleEdit = (app) => {
+        setEditingApp(app);
+        setName(app.name || '');
+        setDescription(app.description || '');
+        setUrl(app.url || '');
+        setIconUrl(app.iconUrl || '');
+        setSelectedIcon(app.icon || 'apps');
+        setModalVisible(true);
+    };
+
+    const handleSave = async () => {
+        if (!name.trim() || !url.trim()) {
+            Alert.alert('Error', 'Please fill in app name and URL');
+            return;
+        }
+
+        setModalVisible(false);
+        setUploading(true);
+        setUploadProgress(0);
+
+        try {
+            setUploadProgress(30);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const appData = {
+                name: name.trim(),
+                description: description.trim(),
+                url: url.trim(),
+                iconUrl: iconUrl || null,
+                icon: selectedIcon,
+            };
+
+            setUploadProgress(60);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            if (editingApp) {
+                await updateDocument('apps', editingApp.id, appData);
+            } else {
+                await createDocument('apps', appData);
+            }
+
+            setUploadProgress(90);
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            setUploadProgress(100);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            loadApps();
+        } catch (error) {
+            console.error('Error saving app:', error);
+            setUploading(false);
+            Alert.alert('Error', 'Failed to save app');
+        }
+    };
 
     const handleDelete = (app) => {
         Alert.alert(
@@ -36,7 +178,6 @@ export default function AppsManager({ navigation }) {
                         setDeleting(true);
                         try {
                             await deleteDocument('apps', app.id);
-                            // Alert.alert('Success', 'App deleted successfully');
                             loadApps();
                         } catch (error) {
                             console.error('Error deleting app:', error);
@@ -50,7 +191,42 @@ export default function AppsManager({ navigation }) {
         );
     };
 
-    // ... (renderAppItem)
+    const renderAppItem = ({ item }) => (
+        <View style={[styles.appCard, { backgroundColor: theme.backgroundCard }, shadows.small]}>
+            <View style={[styles.appIcon, { backgroundColor: theme.accent1 }]}>
+                {item.iconUrl ? (
+                    <Image source={{ uri: item.iconUrl }} style={styles.iconImage} />
+                ) : (
+                    <Ionicons name={item.icon || 'apps'} size={32} color={theme.primary} />
+                )}
+            </View>
+            <View style={styles.appInfo}>
+                <Text style={[styles.appName, { color: theme.text }]}>{item.name}</Text>
+                {item.description && (
+                    <Text style={[styles.appDescription, { color: theme.textSecondary }]} numberOfLines={2}>
+                        {item.description}
+                    </Text>
+                )}
+                <Text style={[styles.appUrl, { color: theme.primary }]} numberOfLines={1}>
+                    {item.url}
+                </Text>
+            </View>
+            <View style={styles.appActions}>
+                <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
+                    onPress={() => handleEdit(item)}
+                >
+                    <Ionicons name="create" size={20} color={theme.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: '#FFE0E0' }]}
+                    onPress={() => handleDelete(item)}
+                >
+                    <Ionicons name="trash" size={20} color={theme.error} />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
     if (loading) {
         return (
@@ -62,7 +238,160 @@ export default function AppsManager({ navigation }) {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
-            {/* ... (header and list) */}
+            {/* Header */}
+            <LinearGradient
+                colors={[theme.primary, theme.primaryLight]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.header}
+            >
+                <Text style={[styles.headerTitle, { color: theme.textInverse }]}>MANAGE APPS</Text>
+                <Text style={[styles.headerSubtitle, { color: theme.textInverse }]}>{apps.length} apps</Text>
+            </LinearGradient>
+
+            {/* Apps List */}
+            <FlatList
+                data={apps}
+                renderItem={renderAppItem}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContent}
+                ListEmptyComponent={
+                    <View style={styles.emptyState}>
+                        <Ionicons name="apps" size={60} color={theme.textSecondary} style={{ opacity: 0.3 }} />
+                        <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+                            No apps yet. Add your first app!
+                        </Text>
+                    </View>
+                }
+            />
+
+            {/* Add Button */}
+            <TouchableOpacity
+                style={[styles.fabButton, { backgroundColor: theme.primary }, shadows.large]}
+                onPress={handleAdd}
+            >
+                <Ionicons name="add" size={28} color={theme.textInverse} />
+            </TouchableOpacity>
+
+            {/* Add/Edit Modal */}
+            <Modal
+                visible={modalVisible}
+                animationType="slide"
+                transparent
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.backgroundCard }]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: theme.text }]}>
+                                {editingApp ? 'Edit App' : 'Add New App'}
+                            </Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                <Ionicons name="close" size={28} color={theme.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                            <View style={styles.inputGroup}>
+                                <Text style={[styles.label, { color: theme.text }]}>App Name *</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+                                    value={name}
+                                    onChangeText={setName}
+                                    placeholder="e.g., WhatsApp"
+                                    placeholderTextColor={theme.textSecondary}
+                                />
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={[styles.label, { color: theme.text }]}>App URL *</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+                                    value={url}
+                                    onChangeText={setUrl}
+                                    placeholder="https://play.google.com/store/apps/details?id=..."
+                                    placeholderTextColor={theme.textSecondary}
+                                    autoCapitalize="none"
+                                    keyboardType="url"
+                                />
+                                <Text style={[styles.hint, { color: theme.textSecondary }]}>
+                                    💡 Paste Play Store link to auto-extract icon
+                                </Text>
+                            </View>
+
+                            {/* Icon Preview */}
+                            {(iconUrl || extractingIcon) && (
+                                <View style={styles.inputGroup}>
+                                    <Text style={[styles.label, { color: theme.text }]}>App Icon</Text>
+                                    <View style={[styles.iconPreview, { backgroundColor: theme.backgroundSecondary }]}>
+                                        {extractingIcon ? (
+                                            <LoadingSpinner size={40} message="Extracting icon..." />
+                                        ) : iconUrl ? (
+                                            <Image source={{ uri: iconUrl }} style={styles.previewImage} />
+                                        ) : null}
+                                    </View>
+                                </View>
+                            )}
+
+                            {/* Manual Icon Selection */}
+                            {!iconUrl && (
+                                <View style={styles.inputGroup}>
+                                    <Text style={[styles.label, { color: theme.text }]}>Select Icon</Text>
+                                    <View style={styles.iconGrid}>
+                                        {iconOptions.map((icon) => (
+                                            <TouchableOpacity
+                                                key={icon}
+                                                style={[
+                                                    styles.iconOption,
+                                                    { backgroundColor: selectedIcon === icon ? theme.accent3 : theme.backgroundSecondary }
+                                                ]}
+                                                onPress={() => setSelectedIcon(icon)}
+                                            >
+                                                <Ionicons
+                                                    name={icon}
+                                                    size={24}
+                                                    color={selectedIcon === icon ? theme.primary : theme.textSecondary}
+                                                />
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                    <TouchableOpacity
+                                        style={[styles.uploadButton, { backgroundColor: theme.backgroundSecondary }]}
+                                        onPress={handlePickImage}
+                                    >
+                                        <Ionicons name="cloud-upload" size={20} color={theme.primary} />
+                                        <Text style={[styles.uploadButtonText, { color: theme.primary }]}>
+                                            Upload Custom Icon
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            <View style={styles.inputGroup}>
+                                <Text style={[styles.label, { color: theme.text }]}>Description</Text>
+                                <TextInput
+                                    style={[styles.textArea, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+                                    value={description}
+                                    onChangeText={setDescription}
+                                    placeholder="Brief description of the app"
+                                    placeholderTextColor={theme.textSecondary}
+                                    multiline
+                                    numberOfLines={3}
+                                />
+                            </View>
+
+                            <TouchableOpacity
+                                style={[styles.saveButton, { backgroundColor: theme.primary }, shadows.medium]}
+                                onPress={handleSave}
+                            >
+                                <Text style={[styles.saveButtonText, { color: theme.textInverse }]}>
+                                    {editingApp ? 'Update App' : 'Add App'}
+                                </Text>
+                            </TouchableOpacity>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Deletion Loading Modal */}
             <Modal
@@ -77,6 +406,7 @@ export default function AppsManager({ navigation }) {
                 </View>
             </Modal>
 
+            {/* Upload Progress */}
             <UploadProgress
                 visible={uploading}
                 progress={uploadProgress}
@@ -101,12 +431,10 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: fontSize.xxl,
         fontWeight: fontWeight.extrabold,
-        color: '#FFFFFF',
         letterSpacing: 1,
     },
     headerSubtitle: {
         fontSize: fontSize.md,
-        color: '#FFFFFF',
         opacity: 0.9,
         marginTop: spacing.xs,
     },
@@ -127,6 +455,12 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.md,
         justifyContent: 'center',
         alignItems: 'center',
+        overflow: 'hidden',
+    },
+    iconImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     appInfo: {
         flex: 1,
@@ -220,10 +554,30 @@ const styles = StyleSheet.create({
         minHeight: 60,
         textAlignVertical: 'top',
     },
+    hint: {
+        fontSize: fontSize.xs,
+        marginTop: spacing.xs,
+        fontStyle: 'italic',
+    },
+    iconPreview: {
+        width: 100,
+        height: 100,
+        borderRadius: borderRadius.md,
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+        overflow: 'hidden',
+    },
+    previewImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
     iconGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.sm,
+        marginBottom: spacing.md,
     },
     iconOption: {
         width: 48,
@@ -231,6 +585,18 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.md,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    uploadButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.md,
+        borderRadius: borderRadius.md,
+        gap: spacing.sm,
+    },
+    uploadButtonText: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
     },
     saveButton: {
         paddingVertical: spacing.md,
@@ -242,6 +608,5 @@ const styles = StyleSheet.create({
     saveButtonText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#FFFFFF',
     },
 });

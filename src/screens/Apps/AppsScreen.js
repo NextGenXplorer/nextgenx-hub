@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, Linking, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, Linking, RefreshControl, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { trackPageView, getAllDocuments } from '../../services/firebase';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - spacing.lg * 3) / 2;
@@ -49,14 +50,24 @@ export default function AppsScreen({ navigation }) {
             activeOpacity={0.8}
             onPress={() => handleOpenApp(item)}
         >
-            <LinearGradient
-                colors={[theme.primary, theme.primaryLight]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.appIconContainer}
-            >
-                <Ionicons name={item.icon || 'apps'} size={32} color={theme.textInverse} />
-            </LinearGradient>
+            {item.iconUrl ? (
+                <View style={styles.appIconContainer}>
+                    <Image
+                        source={{ uri: item.iconUrl }}
+                        style={styles.appLogo}
+                        resizeMode="cover"
+                    />
+                </View>
+            ) : (
+                <LinearGradient
+                    colors={[theme.primary, theme.primaryLight]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.appIconContainer}
+                >
+                    <Ionicons name={item.icon || 'apps'} size={32} color={theme.textInverse} />
+                </LinearGradient>
+            )}
             <Text style={[styles.appName, { color: theme.text }]} numberOfLines={1}>
                 {item.name}
             </Text>
@@ -90,19 +101,23 @@ export default function AppsScreen({ navigation }) {
             </LinearGradient>
 
             {/* Apps Grid */}
-            <FlatList
-                data={apps}
-                renderItem={renderAppCard}
-                keyExtractor={(item) => item.id}
-                numColumns={2}
-                contentContainerStyle={styles.gridContent}
-                columnWrapperStyle={styles.row}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />
-                }
-                ListEmptyComponent={
-                    !loading && (
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <LoadingSpinner message="Loading apps..." />
+                </View>
+            ) : (
+                <FlatList
+                    data={apps}
+                    renderItem={renderAppCard}
+                    keyExtractor={(item) => item.id}
+                    numColumns={2}
+                    contentContainerStyle={styles.gridContent}
+                    columnWrapperStyle={styles.row}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />
+                    }
+                    ListEmptyComponent={
                         <View style={styles.emptyState}>
                             <Ionicons name="apps" size={60} color={theme.textSecondary} style={{ opacity: 0.3 }} />
                             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
@@ -112,9 +127,9 @@ export default function AppsScreen({ navigation }) {
                                 Pull down to refresh
                             </Text>
                         </View>
-                    )
-                }
-            />
+                    }
+                />
+            )}
         </View>
     );
 }
@@ -154,6 +169,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: spacing.xxl * 3,
+    },
     gridContent: {
         padding: spacing.lg,
     },
@@ -174,6 +195,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.md,
+        overflow: 'hidden',
+    },
+    appLogo: {
+        width: '100%',
+        height: '100%',
     },
     appName: {
         fontSize: fontSize.md,

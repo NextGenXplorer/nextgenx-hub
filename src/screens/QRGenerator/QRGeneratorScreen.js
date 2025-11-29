@@ -92,8 +92,8 @@ export default function QRGeneratorScreen() {
                         style={[styles.generateButton, { backgroundColor: theme.primary }, shadows.medium]}
                         onPress={handleGenerate}
                     >
-                        <Text style={styles.generateButtonText}>Generate QR Code</Text>
-                        <Ionicons name="flash" size={20} color="#FFFFFF" />
+                        <Text style={[styles.generateButtonText, { color: theme.textInverse }]}>Generate QR Code</Text>
+                        <Ionicons name="flash" size={20} color={theme.textInverse} />
                     </TouchableOpacity>
                 </View>
 
@@ -105,7 +105,7 @@ export default function QRGeneratorScreen() {
                                 <QRCode
                                     value={generatedUrl}
                                     size={200}
-                                    color={theme.text}
+                                    color="#000000"
                                     backgroundColor="#FFFFFF"
                                 />
                             </View>
@@ -206,7 +206,6 @@ const styles = StyleSheet.create({
     generateButtonText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#FFFFFF',
     },
     qrCard: {
         padding: spacing.xl,

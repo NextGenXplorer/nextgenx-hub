@@ -219,7 +219,7 @@ export default function YouTubeManager({ navigation }) {
                 style={[styles.fabButton, { backgroundColor: theme.primary }, shadows.large]}
                 onPress={handleAdd}
             >
-                <Ionicons name="add" size={28} color="#FFFFFF" />
+                <Ionicons name="add" size={28} color={theme.textInverse} />
             </TouchableOpacity>
 
             {/* Add/Edit Modal */}
@@ -285,7 +285,7 @@ export default function YouTubeManager({ navigation }) {
                                 style={[styles.saveButton, { backgroundColor: theme.primary }, shadows.medium]}
                                 onPress={handleSave}
                             >
-                                <Text style={styles.saveButtonText}>
+                                <Text style={[styles.saveButtonText, { color: theme.textInverse }]}>
                                     {editingVideo ? 'Update Video' : 'Add Video'}
                                 </Text>
                             </TouchableOpacity>
@@ -466,6 +466,5 @@ const styles = StyleSheet.create({
     saveButtonText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#FFFFFF',
     },
 });

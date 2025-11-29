@@ -20,32 +20,19 @@ export default function BottomNavigation({ navigation, currentScreen }) {
     const initialIndex = currentIndex >= 0 ? currentIndex : 0;
     const [activeTab, setActiveTab] = useState(initialIndex);
 
-    // Animation values - initialize based on current screen to prevent jumps
-    const animatedWidths = useRef(
-        navItems.map((_, index) => new Animated.Value(index === initialIndex ? 60 : 0))
-    ).current;
-    const animatedOpacities = useRef(
+    // Single animation value per item for smooth transitions
+    const animations = useRef(
         navItems.map((_, index) => new Animated.Value(index === initialIndex ? 1 : 0))
     ).current;
 
     // Animate tabs when activeTab changes
     useEffect(() => {
         navItems.forEach((_, index) => {
-            const isActive = index === activeTab;
-
-            Animated.parallel([
-                Animated.spring(animatedWidths[index], {
-                    toValue: isActive ? 60 : 0,
-                    useNativeDriver: false,
-                    tension: 120,
-                    friction: 8,
-                }),
-                Animated.timing(animatedOpacities[index], {
-                    toValue: isActive ? 1 : 0,
-                    duration: 150,
-                    useNativeDriver: false,
-                }),
-            ]).start();
+            Animated.timing(animations[index], {
+                toValue: index === activeTab ? 1 : 0,
+                duration: 300,
+                useNativeDriver: false,
+            }).start();
         });
     }, [activeTab]);
 
@@ -57,7 +44,7 @@ export default function BottomNavigation({ navigation, currentScreen }) {
         }
     }, [currentScreen]);
 
-    // Don't render if navigation is not ready (after all hooks)
+    // Don't render if navigation is not ready
     if (!navigation) return null;
 
     const handleTabPress = (index, screen) => {
@@ -70,32 +57,48 @@ export default function BottomNavigation({ navigation, currentScreen }) {
             <View style={[styles.navBar, { backgroundColor: theme.backgroundCard }, shadows.large]}>
                 {navItems.map((item, index) => {
                     const isActive = activeTab === index;
+                    const animValue = animations[index];
+
+                    // Interpolate background color
+                    const backgroundColor = animValue.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['rgba(0,0,0,0)', `${theme.primary}15`],
+                    });
+
+                    // Interpolate label width
+                    const labelWidth = animValue.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 60],
+                    });
 
                     return (
                         <TouchableOpacity
                             key={item.id}
-                            style={[
-                                styles.navItem,
-                                isActive && [
-                                    styles.navItemActive,
-                                    { backgroundColor: `${theme.primary}15` }
-                                ]
-                            ]}
+                            style={styles.navItem}
                             onPress={() => handleTabPress(index, item.screen)}
                             activeOpacity={0.7}
                         >
+                            <Animated.View
+                                style={[
+                                    styles.navItemBackground,
+                                    { backgroundColor },
+                                ]}
+                            />
+
                             <Ionicons
                                 name={item.icon}
                                 size={22}
                                 color={isActive ? theme.primary : theme.textSecondary}
+                                style={{ zIndex: 1 }}
                             />
 
                             <Animated.View
                                 style={{
-                                    width: animatedWidths[index],
-                                    opacity: animatedOpacities[index],
+                                    width: labelWidth,
+                                    opacity: animValue,
                                     overflow: 'hidden',
                                     marginLeft: isActive ? 8 : 0,
+                                    zIndex: 1,
                                 }}
                             >
                                 <Text
@@ -148,9 +151,16 @@ const styles = StyleSheet.create({
         minWidth: 44,
         minHeight: 40,
         maxHeight: 44,
+        position: 'relative',
     },
-    navItemActive: {
-        paddingHorizontal: 12,
+    navItemBackground: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 20,
+        zIndex: 0,
     },
     label: {
         fontSize: 12,

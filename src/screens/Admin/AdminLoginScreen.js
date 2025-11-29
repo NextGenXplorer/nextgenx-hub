@@ -104,11 +104,11 @@ export default function AdminLoginScreen({ navigation }) {
                     disabled={loading}
                 >
                     {loading ? (
-                        <Text style={styles.loginButtonText}>Logging in...</Text>
+                        <Text style={[styles.loginButtonText, { color: theme.textInverse }]}>Logging in...</Text>
                     ) : (
                         <>
-                            <Text style={styles.loginButtonText}>Login</Text>
-                            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                            <Text style={[styles.loginButtonText, { color: theme.textInverse }]}>Login</Text>
+                            <Ionicons name="arrow-forward" size={20} color={theme.textInverse} />
                         </>
                     )}
                 </TouchableOpacity>
@@ -200,7 +200,6 @@ const styles = StyleSheet.create({
     loginButtonText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#FFFFFF',
     },
     forgotPassword: {
         alignItems: 'center',

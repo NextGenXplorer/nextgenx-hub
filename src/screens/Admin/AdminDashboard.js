@@ -111,8 +111,8 @@ export default function AdminDashboard({ navigation }) {
                     style={[styles.logoutButton, { backgroundColor: theme.error }, shadows.medium]}
                     onPress={handleLogout}
                 >
-                    <Ionicons name="log-out" size={20} color="#FFFFFF" />
-                    <Text style={styles.logoutText}>Logout</Text>
+                    <Ionicons name="log-out" size={20} color={theme.textInverse} />
+                    <Text style={[styles.logoutText, { color: theme.textInverse }]}>Logout</Text>
                 </TouchableOpacity>
             </View>
         </ScrollView>
@@ -221,6 +221,5 @@ const styles = StyleSheet.create({
     logoutText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#FFFFFF',
     },
 });

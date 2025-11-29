@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { trackPageView, getAllDocuments } from '../../services/firebase';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function ToolsScreen({ navigation }) {
     const { theme } = useTheme();
@@ -98,17 +99,21 @@ export default function ToolsScreen({ navigation }) {
             </View>
 
             {/* Tools List */}
-            <FlatList
-                data={tools}
-                renderItem={renderToolCard}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />
-                }
-                ListEmptyComponent={
-                    !loading && (
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <LoadingSpinner message="Loading tools..." />
+                </View>
+            ) : (
+                <FlatList
+                    data={tools}
+                    renderItem={renderToolCard}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />
+                    }
+                    ListEmptyComponent={
                         <View style={styles.emptyState}>
                             <Ionicons name="construct" size={60} color={theme.textSecondary} style={{ opacity: 0.3 }} />
                             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
@@ -118,9 +123,9 @@ export default function ToolsScreen({ navigation }) {
                                 Pull down to refresh
                             </Text>
                         </View>
-                    )
-                }
-            />
+                    }
+                />
+            )}
         </View>
     );
 }
@@ -186,6 +191,12 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: fontSize.md,
         paddingVertical: spacing.xs,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: spacing.xxl * 3,
     },
     listContent: {
         padding: spacing.lg,
