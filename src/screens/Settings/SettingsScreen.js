@@ -334,13 +334,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.md,
+        justifyContent: 'space-between',
     },
     themeCard: {
-        width: '47%',
+        width: '48%',
         padding: spacing.md,
         borderRadius: borderRadius.lg,
         alignItems: 'center',
         position: 'relative',
+        minHeight: 140,
+        justifyContent: 'center',
     },
     themePreview: {
         marginBottom: spacing.sm,

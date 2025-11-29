@@ -84,8 +84,8 @@ export default function FeedbackScreen() {
                         style={[styles.submitButton, { backgroundColor: theme.primary }, shadows.medium]}
                         onPress={handleSubmit}
                     >
-                        <Text style={styles.submitButtonText}>Send Feedback</Text>
-                        <Ionicons name="send" size={20} color="#FFFFFF" />
+                        <Text style={[styles.submitButtonText, { color: theme.textInverse }]}>Send Feedback</Text>
+                        <Ionicons name="send" size={20} color={theme.textInverse} />
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -162,6 +162,5 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#FFFFFF',
     },
 });

@@ -177,6 +177,7 @@ const styles = StyleSheet.create({
     content: {
         padding: spacing.lg,
         gap: spacing.lg,
+        paddingBottom: 100, // Extra padding to avoid bottom nav overlap
     },
     inputCard: {
         padding: spacing.lg,
