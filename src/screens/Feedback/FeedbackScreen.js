@@ -1,22 +1,65 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
+import { submitFeedback } from '../../services/firebase';
 
 export default function FeedbackScreen() {
     const { theme } = useTheme();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = () => {
-        console.log('Feedback submitted:', { name, email, message });
-        // Reset form
-        setName('');
-        setEmail('');
-        setMessage('');
+    const handleSubmit = async () => {
+        // Validation
+        if (!name.trim()) {
+            Alert.alert('Error', 'Please enter your name');
+            return;
+        }
+        if (!email.trim()) {
+            Alert.alert('Error', 'Please enter your email');
+            return;
+        }
+        if (!message.trim()) {
+            Alert.alert('Error', 'Please enter your message');
+            return;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert('Error', 'Please enter a valid email address');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await submitFeedback({
+                name: name.trim(),
+                email: email.trim(),
+                message: message.trim(),
+                status: 'new'
+            });
+
+            Alert.alert(
+                'Thank You!',
+                'Your feedback has been submitted successfully. We appreciate your input!',
+                [{ text: 'OK' }]
+            );
+
+            // Reset form
+            setName('');
+            setEmail('');
+            setMessage('');
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            Alert.alert('Error', 'Failed to submit feedback. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -81,11 +124,19 @@ export default function FeedbackScreen() {
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.submitButton, { backgroundColor: theme.primary }, shadows.medium]}
+                        style={[
+                            styles.submitButton,
+                            { backgroundColor: theme.primary },
+                            shadows.medium,
+                            loading && { opacity: 0.7 }
+                        ]}
                         onPress={handleSubmit}
+                        disabled={loading}
                     >
-                        <Text style={styles.submitButtonText}>Send Feedback</Text>
-                        <Ionicons name="send" size={20} color="#FFFFFF" />
+                        <Text style={styles.submitButtonText}>
+                            {loading ? 'Sending...' : 'Send Feedback'}
+                        </Text>
+                        <Ionicons name={loading ? 'hourglass' : 'send'} size={20} color="#FFFFFF" />
                     </TouchableOpacity>
                 </View>
             </ScrollView>

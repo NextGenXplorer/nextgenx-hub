@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingVi
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 
 export default function WelcomeScreen({ onComplete }) {
     const [name, setName] = useState('');
+    const { theme } = useTheme();
 
     const handleContinue = async () => {
         if (name.trim()) {
@@ -26,14 +28,14 @@ export default function WelcomeScreen({ onComplete }) {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <LinearGradient
-                colors={['#FF8C42', '#FFC107']}
+                colors={[theme.primary, theme.accent]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.gradient}
             >
                 <View style={styles.content}>
                     {/* Welcome Icon */}
-                    <View style={styles.iconContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
                         <Ionicons name="hand-right" size={80} color="#FFFFFF" />
                     </View>
 
@@ -42,16 +44,23 @@ export default function WelcomeScreen({ onComplete }) {
                     <Text style={styles.subtitle}>Let's get to know you better</Text>
 
                     {/* Name Input Card */}
-                    <View style={[styles.inputCard, shadows.large]}>
-                        <Text style={styles.label}>What's your name?</Text>
-                        <View style={styles.inputWrapper}>
-                            <Ionicons name="person" size={24} color="#FF8C42" />
+                    <View style={[
+                        styles.inputCard,
+                        shadows.large,
+                        { backgroundColor: theme.backgroundCard }
+                    ]}>
+                        <Text style={[styles.label, { color: theme.text }]}>What's your name?</Text>
+                        <View style={[
+                            styles.inputWrapper,
+                            { backgroundColor: theme.backgroundSecondary }
+                        ]}>
+                            <Ionicons name="person" size={24} color={theme.primary} />
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: theme.text }]}
                                 value={name}
                                 onChangeText={setName}
                                 placeholder="Enter your name"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={theme.textMuted}
                                 autoFocus
                             />
                         </View>
@@ -59,6 +68,7 @@ export default function WelcomeScreen({ onComplete }) {
                         <TouchableOpacity
                             style={[
                                 styles.continueButton,
+                                { backgroundColor: theme.primary },
                                 !name.trim() && styles.continueButtonDisabled,
                                 shadows.medium
                             ]}
@@ -108,7 +118,6 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.xl,
@@ -128,7 +137,6 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xxl,
     },
     inputCard: {
-        backgroundColor: '#FFFFFF',
         borderRadius: borderRadius.xl,
         padding: spacing.xl,
         marginBottom: spacing.xl,
@@ -136,13 +144,11 @@ const styles = StyleSheet.create({
     label: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: '#2C2C2C',
         marginBottom: spacing.md,
     },
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
         borderRadius: borderRadius.lg,
         paddingHorizontal: spacing.md,
         marginBottom: spacing.lg,
@@ -152,13 +158,11 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: fontSize.lg,
         paddingVertical: spacing.md,
-        color: '#2C2C2C',
     },
     continueButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FF8C42',
         paddingVertical: spacing.md,
         borderRadius: borderRadius.lg,
         gap: spacing.sm,

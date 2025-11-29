@@ -1,17 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { loginUser } from '../../services/firebase';
+import { saveAdminSession, getAdminSession } from '../../utils/adminSession';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function AdminLoginScreen({ navigation }) {
     const { theme } = useTheme();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [checkingSession, setCheckingSession] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
+
+    // Check for existing valid session on mount
+    useEffect(() => {
+        checkExistingSession();
+    }, []);
+
+    const checkExistingSession = async () => {
+        try {
+            const session = await getAdminSession();
+            if (session) {
+                // Valid session exists, go directly to dashboard
+                console.log('Valid admin session found, auto-logging in...');
+                navigation.replace('AdminDashboard');
+            }
+        } catch (error) {
+            console.error('Error checking session:', error);
+        } finally {
+            setCheckingSession(false);
+        }
+    };
 
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) {
@@ -21,8 +44,10 @@ export default function AdminLoginScreen({ navigation }) {
 
         setLoading(true);
         try {
-            await loginUser(email, password);
-            Alert.alert('Success', 'Logged in successfully!');
+            const user = await loginUser(email, password);
+            // Save admin session for 7 days
+            await saveAdminSession(user);
+            Alert.alert('Success', 'Logged in successfully! Session valid for 7 days.');
             navigation.replace('AdminDashboard');
         } catch (error) {
             console.error('Login error:', error);
@@ -31,6 +56,15 @@ export default function AdminLoginScreen({ navigation }) {
             setLoading(false);
         }
     };
+
+    // Show loading while checking session
+    if (checkingSession) {
+        return (
+            <View style={[styles.container, { backgroundColor: theme.backgroundSecondary, justifyContent: 'center', alignItems: 'center' }]}>
+                <LoadingSpinner message="Checking session..." />
+            </View>
+        );
+    }
 
     return (
         <KeyboardAvoidingView

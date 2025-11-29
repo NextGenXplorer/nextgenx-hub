@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
-import { getAllDocuments, createDocument, updateDocument, deleteDocument } from '../../services/firebase';
+import { addVideo, updateVideo, deleteVideo, getAllVideos } from '../../services/admin.service';
 import UploadProgress from '../../components/UploadProgress';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 
@@ -29,7 +29,7 @@ export default function YouTubeManager({ navigation }) {
 
     const loadVideos = async () => {
         try {
-            const data = await getAllDocuments('youtubeLinks');
+            const data = await getAllVideos();
             setVideos(data);
         } catch (error) {
             console.error('Error loading videos:', error);
@@ -98,9 +98,11 @@ export default function YouTubeManager({ navigation }) {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             if (editingVideo) {
-                await updateDocument('youtubeLinks', editingVideo.id, videoData);
+                // Update without notification
+                await updateVideo(editingVideo.id, videoData, false);
             } else {
-                await createDocument('youtubeLinks', videoData);
+                // Add new video with notification
+                await addVideo(videoData, true);
             }
 
             setUploadProgress(90);
@@ -129,8 +131,7 @@ export default function YouTubeManager({ navigation }) {
                     onPress: async () => {
                         setDeleting(true);
                         try {
-                            await deleteDocument('youtubeLinks', video.id);
-                            // Alert.alert('Success', 'Video deleted successfully');
+                            await deleteVideo(video.id);
                             loadVideos();
                         } catch (error) {
                             console.error('Error deleting video:', error);

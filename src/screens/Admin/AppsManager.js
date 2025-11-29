@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
-import { getAllDocuments, createDocument, updateDocument, deleteDocument } from '../../services/firebase';
+import { addApp, updateApp, deleteApp, getAllApps } from '../../services/admin.service';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import UploadProgress from '../../components/UploadProgress';
 import { extractPlayStoreIcon, isPlayStoreUrl, extractPackageName } from '../../utils/extractPlayStoreIcon';
@@ -47,7 +47,7 @@ export default function AppsManager({ navigation }) {
 
     const loadApps = async () => {
         try {
-            const data = await getAllDocuments('apps');
+            const data = await getAllApps();
             setApps(data);
         } catch (error) {
             console.error('Error loading apps:', error);
@@ -146,9 +146,11 @@ export default function AppsManager({ navigation }) {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             if (editingApp) {
-                await updateDocument('apps', editingApp.id, appData);
+                // Update without notification (sendNotification = false)
+                await updateApp(editingApp.id, appData, false);
             } else {
-                await createDocument('apps', appData);
+                // Add new app with notification (sendNotification = true)
+                await addApp(appData, true);
             }
 
             setUploadProgress(90);
@@ -177,7 +179,7 @@ export default function AppsManager({ navigation }) {
                     onPress: async () => {
                         setDeleting(true);
                         try {
-                            await deleteDocument('apps', app.id);
+                            await deleteApp(app.id);
                             loadApps();
                         } catch (error) {
                             console.error('Error deleting app:', error);

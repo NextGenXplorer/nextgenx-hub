@@ -22,14 +22,32 @@ import AdminDashboard from '../screens/Admin/AdminDashboard';
 import ToolsManager from '../screens/Admin/ToolsManager';
 import YouTubeManager from '../screens/Admin/YouTubeManager';
 import AppsManager from '../screens/Admin/AppsManager';
+import FeedbackManager from '../screens/Admin/FeedbackManager';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
 
 const Stack = createStackNavigator();
 
+// Main screens that should show bottom navigation
+const MAIN_SCREENS = ['Home', 'Tools', 'Apps', 'QRGenerator', 'YouTube', 'Profile'];
+
 export default function AppNavigator() {
     const { theme } = useTheme();
     const [currentScreen, setCurrentScreen] = React.useState('Home');
+    const [isNavigationReady, setIsNavigationReady] = React.useState(false);
     const navigationRef = React.useRef(null);
+
+    // Update current screen from navigation state
+    const updateCurrentScreen = React.useCallback(() => {
+        if (navigationRef.current) {
+            const state = navigationRef.current.getState();
+            if (state && state.routes && state.routes.length > 0) {
+                const currentRoute = state.routes[state.index];
+                if (currentRoute && currentRoute.name !== currentScreen) {
+                    setCurrentScreen(currentRoute.name);
+                }
+            }
+        }
+    }, [currentScreen]);
 
     const screenOptions = {
         headerStyle: {
@@ -49,11 +67,12 @@ export default function AppNavigator() {
     return (
         <NavigationContainer
             ref={navigationRef}
+            onReady={() => {
+                setIsNavigationReady(true);
+                updateCurrentScreen();
+            }}
             onStateChange={() => {
-                const currentRoute = navigationRef.current?.getCurrentRoute();
-                if (currentRoute) {
-                    setCurrentScreen(currentRoute.name);
-                }
+                updateCurrentScreen();
             }}
         >
             <View style={{ flex: 1 }}>
@@ -78,10 +97,11 @@ export default function AppNavigator() {
                     <Stack.Screen name="ToolsManager" component={ToolsManager} options={{ title: 'Manage Tools' }} />
                     <Stack.Screen name="YouTubeManager" component={YouTubeManager} options={{ title: 'Manage Videos' }} />
                     <Stack.Screen name="AppsManager" component={AppsManager} options={{ title: 'Manage Apps' }} />
+                    <Stack.Screen name="FeedbackManager" component={FeedbackManager} options={{ title: 'Manage Feedback' }} />
                 </Stack.Navigator>
 
                 {/* Global Bottom Navigation - Only show on main screens */}
-                {['Home', 'Tools', 'QRGenerator', 'YouTube', 'Profile'].includes(currentScreen) && (
+                {isNavigationReady && MAIN_SCREENS.includes(currentScreen) && (
                     <BottomNavigation
                         navigation={navigationRef.current}
                         currentScreen={currentScreen}
