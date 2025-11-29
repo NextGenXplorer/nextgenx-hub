@@ -81,3 +81,12 @@ web-build/
 *.log
 *.tmp
 *.temp
+
+# Environment files
+.env
+*.env
+env.txt
+credentials.json
+*.jks
+*.keystore
+*.base64

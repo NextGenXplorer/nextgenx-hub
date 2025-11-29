@@ -1,0 +1,49 @@
+name: 📦 Expo EAS Local Android Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-android-local:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🏗 Setup repository
+        uses: actions/checkout@v4
+
+      - name: 🧱 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🧰 Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🏗️ Build Android AAB with EAS
+        run: |
+          eas build --platform android --profile production --local --non-interactive
+        env:
+          EAS_NO_VCS: 1
+          EAS_LOCAL_BUILD_SKIP_CLEANUP: 1
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📤 Upload built AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextgenx-hub-android-aab
+          path: ./*.aab
