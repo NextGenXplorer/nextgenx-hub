@@ -81,7 +81,7 @@ export default function AppNavigator() {
                 </Stack.Navigator>
 
                 {/* Global Bottom Navigation - Only show on main screens */}
-                {['Home', 'Tools', 'QRGenerator', 'YouTube', 'Profile'].includes(currentScreen) && (
+                {['Home', 'Tools', 'Apps', 'QRGenerator', 'YouTube', 'Profile'].includes(currentScreen) && (
                     <BottomNavigation
                         navigation={navigationRef.current}
                         currentScreen={currentScreen}

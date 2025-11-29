@@ -164,14 +164,18 @@ export default function SettingsScreen() {
                         </View>
                     </View>
 
-                    <View style={styles.themesContainer}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.themesContainer}
+                    >
                         {themeOptions.map((option) => (
                             <TouchableOpacity
                                 key={option.id}
                                 style={[
                                     styles.themeCard,
                                     {
-                                        backgroundColor: theme.backgroundSecondary,
+                                        backgroundColor: theme.background,
                                         borderColor: themeName === option.id ? theme.primary : theme.border,
                                         borderWidth: themeName === option.id ? 2 : 1,
                                     },
@@ -202,7 +206,7 @@ export default function SettingsScreen() {
                                 )}
                             </TouchableOpacity>
                         ))}
-                    </View>
+                    </ScrollView>
                 </View>
 
                 {/* Preview Section */}
@@ -331,19 +335,18 @@ const styles = StyleSheet.create({
         fontWeight: fontWeight.semibold,
     },
     themesContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
+        paddingVertical: spacing.sm,
         gap: spacing.md,
-        justifyContent: 'space-between',
     },
     themeCard: {
-        width: '48%',
+        width: 140,
         padding: spacing.md,
         borderRadius: borderRadius.lg,
         alignItems: 'center',
         position: 'relative',
         minHeight: 140,
         justifyContent: 'center',
+        marginRight: spacing.md,
     },
     themePreview: {
         marginBottom: spacing.sm,

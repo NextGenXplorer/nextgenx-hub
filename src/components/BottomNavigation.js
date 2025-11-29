@@ -8,7 +8,8 @@ const { width } = Dimensions.get('window');
 
 const navItems = [
     { id: 'home', label: 'Home', icon: 'home', screen: 'Home' },
-    { id: 'tools', label: 'Tools', icon: 'grid', screen: 'Tools' },
+    { id: 'tools', label: 'Tools', icon: 'construct', screen: 'Tools' },
+    { id: 'apps', label: 'Apps', icon: 'apps', screen: 'Apps' },
     { id: 'qr', label: 'QR Code', icon: 'qr-code', screen: 'QRGenerator' },
     { id: 'youtube', label: 'Videos', icon: 'play-circle', screen: 'YouTube' },
     { id: 'profile', label: 'Profile', icon: 'person', screen: 'Profile' },
