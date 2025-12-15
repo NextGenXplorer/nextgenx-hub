@@ -18,23 +18,42 @@ function FCMInitializer() {
     const { user } = useAuth();
 
     useEffect(() => {
-        if (user) {
-            initializeFCM(user.uid);
-        }
+        // Initialize FCM for ALL users (logged in or not)
+        // Pass userId if available for user-specific notifications
+        const userId = user?.uid || null;
+
+        console.log('Initializing FCM...', userId ? `for user: ${userId}` : 'for anonymous user');
+        initializeFCM(userId);
 
         // Handle foreground notifications
-        const unsubscribeForeground = onForegroundMessage((remoteMessage) => {
-            console.log('Foreground notification received:', remoteMessage);
+        const unsubscribeForeground = onForegroundMessage((notification) => {
+            console.log('Foreground notification received:', notification);
+            // You can add custom handling here, e.g., show in-app alert
+            const { title, body } = notification.request.content;
+            console.log(`Notification: ${title} - ${body}`);
         });
 
-        // Handle notification opened app
-        onNotificationOpenedApp((remoteMessage) => {
-            console.log('Notification opened app:', remoteMessage);
+        // Handle notification opened app (user tapped notification)
+        const unsubscribeResponse = onNotificationOpenedApp((response) => {
+            console.log('Notification opened app:', response);
+            const data = response.notification.request.content.data;
+
+            // Handle navigation based on notification data
+            if (data?.screen) {
+                console.log('Navigate to screen:', data.screen);
+                // Add navigation logic here if needed
+            }
+            if (data?.itemId) {
+                console.log('Open item:', data.itemId);
+            }
         });
 
         return () => {
-            if (unsubscribeForeground) {
-                unsubscribeForeground();
+            if (unsubscribeForeground && unsubscribeForeground.remove) {
+                unsubscribeForeground.remove();
+            }
+            if (unsubscribeResponse && unsubscribeResponse.remove) {
+                unsubscribeResponse.remove();
             }
         };
     }, [user]);

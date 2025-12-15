@@ -1,33 +1,147 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert, Linking, Share } from 'react-native';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { addBookmark, removeBookmark, isBookmarked as checkIsBookmarked } from '../../services/bookmarkService';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 
 const { width } = Dimensions.get('window');
 
 export default function VideoPlayerScreen({ route, navigation }) {
     const { theme } = useTheme();
-    const { video } = route.params;
-    const [playing, setPlaying] = useState(false);
+    const { video } = route.params || {};
+    const [playing, setPlaying] = useState(true);
+    const [isSaved, setIsSaved] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     // Extract YouTube video ID from URL
-    const getYouTubeVideoId = (url) => {
+    const getYouTubeVideoId = useCallback((url) => {
         if (!url) return null;
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
         const match = url.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
+    }, []);
+
+    // Get video properties safely
+    const videoTitle = video?.title || video?.name || 'Untitled Video';
+    const videoDescription = video?.description || '';
+    const videoUrl = video?.url || video?.link || video?.videoUrl || video?.youtubeUrl || '';
+    const videoId = video?.videoId || getYouTubeVideoId(videoUrl);
+    const itemId = video?.id || videoId || Date.now().toString();
+
+    const youtubeUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : '';
+
+    // Check if video is bookmarked on load
+    useEffect(() => {
+        const checkBookmarkStatus = async () => {
+            try {
+                if (itemId) {
+                    const saved = await checkIsBookmarked(itemId);
+                    setIsSaved(saved);
+                }
+            } catch (error) {
+                console.error('Error checking bookmark status:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkBookmarkStatus();
+    }, [itemId]);
+
+    // Handle player state changes
+    const onStateChange = useCallback((state) => {
+        if (state === 'ended') {
+            setPlaying(false);
+        }
+    }, []);
+
+    // Handle Save/Bookmark
+    const handleSave = async () => {
+        try {
+            if (isSaved) {
+                await removeBookmark(itemId);
+                setIsSaved(false);
+                Alert.alert('Removed', 'Video removed from bookmarks');
+            } else {
+                // Create bookmark data with all necessary fields
+                const bookmarkData = {
+                    id: itemId,
+                    title: videoTitle,
+                    description: videoDescription,
+                    videoId: videoId,
+                    url: youtubeUrl,
+                };
+                await addBookmark(bookmarkData, 'video');
+                setIsSaved(true);
+                Alert.alert('Saved', 'Video added to bookmarks');
+            }
+        } catch (error) {
+            console.error('Bookmark error:', error);
+            Alert.alert('Error', 'Could not save video');
+        }
     };
 
-    // Try to get video ID directly from the video object, or extract from URL
-    const videoUrl = video.url || video.link || video.videoUrl || video.youtubeUrl;
-    const videoId = video.videoId || getYouTubeVideoId(videoUrl);
+    // Handle Share
+    const handleShare = async () => {
+        if (!youtubeUrl) {
+            Alert.alert('Error', 'No video URL to share');
+            return;
+        }
 
-    console.log('Video data:', video);
-    console.log('Video URL:', videoUrl);
-    console.log('Video ID (direct or extracted):', videoId);
+        try {
+            await Share.share({
+                message: `🎬 ${videoTitle}\n\nWatch here: ${youtubeUrl}`,
+                url: youtubeUrl,
+                title: videoTitle,
+            });
+        } catch (error) {
+            console.error('Share error:', error);
+            Alert.alert('Error', 'Could not share video');
+        }
+    };
+
+    // Handle Open in YouTube
+    const handleOpenInYouTube = () => {
+        if (!youtubeUrl) {
+            Alert.alert('Error', 'No video URL available');
+            return;
+        }
+
+        Linking.openURL(youtubeUrl).catch(() => {
+            Alert.alert('Error', 'Could not open YouTube');
+        });
+    };
+
+    // Handle back navigation
+    const handleGoBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+        } else {
+            navigation.navigate('YouTube');
+        }
+    };
+
+    // Show error if no video data
+    if (!video || !videoId) {
+        return (
+            <View style={[styles.container, styles.errorContainer, { backgroundColor: theme.backgroundSecondary }]}>
+                <Ionicons name="alert-circle" size={80} color={theme.error || '#FF6B6B'} />
+                <Text style={[styles.errorTitle, { color: theme.text }]}>Video Not Found</Text>
+                <Text style={[styles.errorText, { color: theme.textSecondary }]}>
+                    The video could not be loaded. It may have been removed or the link is invalid.
+                </Text>
+                <TouchableOpacity
+                    style={[styles.backButton, { backgroundColor: theme.primary }]}
+                    onPress={handleGoBack}
+                >
+                    <Ionicons name="arrow-back" size={20} color={theme.textInverse} />
+                    <Text style={[styles.backButtonText, { color: theme.textInverse }]}>Go Back</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
         <ScrollView
@@ -36,85 +150,87 @@ export default function VideoPlayerScreen({ route, navigation }) {
         >
             {/* Video Player */}
             <View style={styles.playerContainer}>
-                {videoId ? (
-                    <YoutubePlayer
-                        height={220}
-                        play={playing}
-                        videoId={videoId}
-                        onChangeState={(state) => {
-                            console.log('Player state changed:', state);
-                            if (state === 'ended') {
-                                setPlaying(false);
-                            }
-                        }}
-                    />
-                ) : (
-                    <View style={[styles.playerContainer, { justifyContent: 'center', alignItems: 'center' }]}>
-                        <Ionicons name="alert-circle" size={60} color={theme.textSecondary} />
-                        <Text style={{ color: theme.textSecondary, marginTop: 10 }}>Invalid video URL</Text>
-                    </View>
-                )}
+                <YoutubePlayer
+                    height={220}
+                    width={width}
+                    play={playing}
+                    videoId={videoId}
+                    onChangeState={onStateChange}
+                    webViewProps={{
+                        allowsInlineMediaPlayback: true,
+                    }}
+                />
             </View>
 
             {/* Video Info */}
             <View style={[styles.infoCard, { backgroundColor: theme.backgroundCard }, shadows.small]}>
                 <Text style={[styles.videoTitle, { color: theme.text }]}>
-                    {video.title}
+                    {videoTitle}
                 </Text>
 
-                {video.description && (
+                {videoDescription ? (
                     <Text style={[styles.videoDescription, { color: theme.textSecondary }]}>
-                        {video.description}
+                        {videoDescription}
                     </Text>
-                )}
+                ) : null}
 
                 <View style={styles.actions}>
                     <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
-                        onPress={() => {
-                            console.log('Play/Pause button pressed. Current state:', playing);
-                            setPlaying(!playing);
-                        }}
+                        style={[
+                            styles.actionButton,
+                            { backgroundColor: isSaved ? theme.primary : theme.accent3 }
+                        ]}
+                        onPress={handleSave}
+                        disabled={loading}
                     >
                         <Ionicons
-                            name={playing ? 'pause' : 'play'}
+                            name={isSaved ? 'bookmark' : 'bookmark-outline'}
                             size={20}
-                            color={theme.primary}
+                            color={isSaved ? theme.textInverse : theme.primary}
                         />
-                        <Text style={[styles.actionText, { color: theme.primary }]}>
-                            {playing ? 'Pause' : 'Play'}
+                        <Text style={[
+                            styles.actionText,
+                            { color: isSaved ? theme.textInverse : theme.primary }
+                        ]}>
+                            {isSaved ? 'Saved' : 'Save'}
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
-                    >
-                        <Ionicons name="bookmark-outline" size={20} color={theme.primary} />
-                        <Text style={[styles.actionText, { color: theme.primary }]}>
-                            Save
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
+                        onPress={handleShare}
                     >
                         <Ionicons name="share-social" size={20} color={theme.primary} />
                         <Text style={[styles.actionText, { color: theme.primary }]}>
                             Share
                         </Text>
                     </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionButton, { backgroundColor: theme.accent3 }]}
+                        onPress={handleOpenInYouTube}
+                    >
+                        <Ionicons name="logo-youtube" size={20} color="#FF0000" />
+                        <Text style={[styles.actionText, { color: theme.primary }]}>
+                            YouTube
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
-            {/* Related Videos Section */}
-            <View style={styles.relatedSection}>
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>
-                    More Videos
-                </Text>
-                <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
-                    Coming soon...
-                </Text>
+            {/* Channel Info */}
+            <View style={[styles.channelCard, { backgroundColor: theme.backgroundCard }, shadows.small]}>
+                <View style={[styles.channelAvatar, { backgroundColor: theme.primary }]}>
+                    <Ionicons name="play" size={24} color={theme.textInverse} />
+                </View>
+                <View style={styles.channelInfo}>
+                    <Text style={[styles.channelName, { color: theme.text }]}>NextGenX</Text>
+                    <Text style={[styles.channelMeta, { color: theme.textSecondary }]}>Official Channel</Text>
+                </View>
             </View>
+
+            {/* Spacer for bottom */}
+            <View style={{ height: 100 }} />
         </ScrollView>
     );
 }
@@ -122,6 +238,34 @@ export default function VideoPlayerScreen({ route, navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    errorContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.xl,
+    },
+    errorTitle: {
+        fontSize: fontSize.xl,
+        fontWeight: fontWeight.bold,
+        marginTop: spacing.lg,
+        marginBottom: spacing.sm,
+    },
+    errorText: {
+        fontSize: fontSize.md,
+        textAlign: 'center',
+        marginBottom: spacing.xl,
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
+        borderRadius: borderRadius.lg,
+        gap: spacing.sm,
+    },
+    backButtonText: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
     },
     playerContainer: {
         width: width,
@@ -160,16 +304,29 @@ const styles = StyleSheet.create({
         fontSize: fontSize.sm,
         fontWeight: fontWeight.semibold,
     },
-    relatedSection: {
-        padding: spacing.lg,
-        paddingBottom: 100,
+    channelCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: spacing.lg,
+        padding: spacing.md,
+        borderRadius: borderRadius.xl,
+        gap: spacing.md,
     },
-    sectionTitle: {
+    channelAvatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    channelInfo: {
+        flex: 1,
+    },
+    channelName: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        marginBottom: spacing.xs,
     },
-    sectionSubtitle: {
-        fontSize: fontSize.md,
+    channelMeta: {
+        fontSize: fontSize.sm,
     },
 });

@@ -22,6 +22,7 @@ export default function YouTubeManager({ navigation }) {
     const [title, setTitle] = useState('');
     const [videoId, setVideoId] = useState('');
     const [description, setDescription] = useState('');
+    const [fetchingTitle, setFetchingTitle] = useState(false);
 
     useEffect(() => {
         loadVideos();
@@ -60,6 +61,7 @@ export default function YouTubeManager({ navigation }) {
         const patterns = [
             /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
             /youtube\.com\/embed\/([^&\n?#]+)/,
+            /youtube\.com\/shorts\/([^&\n?#]+)/,
         ];
 
         for (const pattern of patterns) {
@@ -68,7 +70,87 @@ export default function YouTubeManager({ navigation }) {
                 return match[1];
             }
         }
+        // Check if it's already a video ID (11 characters)
+        if (url.length === 11 && /^[a-zA-Z0-9_-]+$/.test(url)) {
+            return url;
+        }
         return url; // Return as-is if no pattern matches
+    };
+
+    // Fetch YouTube video title using oEmbed API with fallback
+    const fetchVideoTitle = async (url, forceUpdate = false) => {
+        const extractedId = extractVideoId(url);
+        if (!extractedId || extractedId.length !== 11) return null;
+
+        // Don't fetch if title already exists (unless forced)
+        if (title && !forceUpdate) return null;
+
+        try {
+            setFetchingTitle(true);
+            const videoUrl = `https://www.youtube.com/watch?v=${extractedId}`;
+
+            // Try YouTube oEmbed API first
+            const response = await fetch(
+                `https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`,
+                { timeout: 5000 }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.title) {
+                    setTitle(data.title);
+                    setFetchingTitle(false);
+                    return data.title;
+                }
+            }
+        } catch (error) {
+            console.log('YouTube oEmbed failed, trying fallback:', error.message);
+        }
+
+        // Fallback: Try noembed.com (proxy service)
+        try {
+            const fallbackResponse = await fetch(
+                `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${extractedId}`,
+                { timeout: 5000 }
+            );
+
+            if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                if (fallbackData.title) {
+                    setTitle(fallbackData.title);
+                    setFetchingTitle(false);
+                    return fallbackData.title;
+                }
+            }
+        } catch (fallbackError) {
+            console.log('Fallback API also failed:', fallbackError.message);
+        }
+
+        // If all APIs fail, set a placeholder that admin can edit
+        setTitle(`Video ${extractedId}`);
+        setFetchingTitle(false);
+        return null;
+    };
+
+    // Handle URL change and auto-fetch title
+    const handleUrlChange = (url) => {
+        setVideoId(url);
+
+        // Clear title when URL changes significantly
+        if (!url || url.length < 5) {
+            return;
+        }
+
+        // Auto-fetch title if URL looks valid
+        const extractedId = extractVideoId(url);
+        if (extractedId && extractedId.length === 11) {
+            // Small delay to avoid fetching while still typing
+            setTimeout(() => {
+                if (videoId === url || url.includes(extractedId)) {
+                    fetchVideoTitle(url);
+                }
+            }, 500);
+        }
     };
 
     const handleSave = async () => {
@@ -243,29 +325,57 @@ export default function YouTubeManager({ navigation }) {
 
                         <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
                             <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.text }]}>Video Title *</Text>
+                                <Text style={[styles.label, { color: theme.text }]}>
+                                    Video Title {fetchingTitle ? '(Fetching...)' : '*'}
+                                </Text>
                                 <TextInput
-                                    style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
-                                    value={title}
+                                    style={[
+                                        styles.input,
+                                        { backgroundColor: theme.backgroundSecondary, color: theme.text },
+                                        fetchingTitle && { opacity: 0.6 }
+                                    ]}
+                                    value={fetchingTitle ? 'Fetching title...' : title}
                                     onChangeText={setTitle}
-                                    placeholder="e.g., How to use NextGenX"
+                                    placeholder="Auto-filled from YouTube or enter manually"
                                     placeholderTextColor={theme.textSecondary}
+                                    editable={!fetchingTitle}
                                 />
+                                {title && !fetchingTitle && (
+                                    <Text style={[styles.hint, { color: theme.success || '#10B981' }]}>
+                                        ✓ Title ready
+                                    </Text>
+                                )}
                             </View>
 
                             <View style={styles.inputGroup}>
                                 <Text style={[styles.label, { color: theme.text }]}>YouTube Link *</Text>
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
-                                    value={videoId}
-                                    onChangeText={setVideoId}
-                                    placeholder="https://youtube.com/watch?v=..."
-                                    placeholderTextColor={theme.textSecondary}
-                                    autoCapitalize="none"
-                                    keyboardType="url"
-                                />
+                                <View style={styles.urlInputRow}>
+                                    <TextInput
+                                        style={[styles.urlInput, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+                                        value={videoId}
+                                        onChangeText={handleUrlChange}
+                                        placeholder="https://youtube.com/watch?v=..."
+                                        placeholderTextColor={theme.textSecondary}
+                                        autoCapitalize="none"
+                                        keyboardType="url"
+                                    />
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.fetchButton,
+                                            { backgroundColor: fetchingTitle ? theme.textSecondary : theme.primary }
+                                        ]}
+                                        onPress={() => fetchVideoTitle(videoId, true)}
+                                        disabled={fetchingTitle || !videoId.trim()}
+                                    >
+                                        {fetchingTitle ? (
+                                            <Ionicons name="hourglass" size={20} color={theme.textInverse} />
+                                        ) : (
+                                            <Ionicons name="refresh" size={20} color={theme.textInverse} />
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
                                 <Text style={[styles.hint, { color: theme.textSecondary }]}>
-                                    Paste full YouTube URL or video ID
+                                    Paste URL → Title auto-fetches • Tap refresh to re-fetch
                                 </Text>
                             </View>
 
@@ -443,6 +553,28 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         borderRadius: borderRadius.md,
+    },
+    urlInputRow: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    urlInput: {
+        flex: 1,
+        fontSize: fontSize.md,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: borderRadius.md,
+    },
+    fetchButton: {
+        width: 48,
+        height: 48,
+        borderRadius: borderRadius.md,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    fetchButtonText: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.bold,
     },
     textArea: {
         fontSize: fontSize.md,

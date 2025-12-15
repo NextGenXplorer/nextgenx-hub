@@ -2,17 +2,31 @@ const { getFirestore } = require('../config/firebase');
 
 class DeviceService {
     /**
+     * Detect token type from token string
+     */
+    detectTokenType(token) {
+        if (!token) return 'unknown';
+        if (token.startsWith('ExponentPushToken')) return 'expo';
+        return 'fcm';
+    }
+
+    /**
      * Register a device token
      */
-    async registerToken(token, userId = null, deviceInfo = {}) {
+    async registerToken(token, userId = null, deviceInfo = {}, tokenType = null) {
         const db = getFirestore();
+
+        // Auto-detect token type if not provided
+        const detectedType = tokenType || this.detectTokenType(token);
 
         const tokenData = {
             token,
+            tokenType: detectedType,
             userId,
             platform: deviceInfo.platform || 'unknown',
             deviceName: deviceInfo.deviceName || 'unknown',
             appVersion: deviceInfo.appVersion || '1.0.0',
+            osVersion: deviceInfo.osVersion || 'unknown',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             isActive: true,
@@ -29,18 +43,19 @@ class DeviceService {
                 const docId = existingToken.docs[0].id;
                 await db.collection('device_tokens').doc(docId).update({
                     userId,
+                    tokenType: detectedType,
                     ...deviceInfo,
                     updatedAt: new Date().toISOString(),
                     isActive: true,
                 });
-                console.log(`📱 Token updated: ${token.substring(0, 20)}...`);
-                return { success: true, action: 'updated', id: docId };
+                console.log(`📱 Token updated (${detectedType}): ${token.substring(0, 20)}...`);
+                return { success: true, action: 'updated', id: docId, tokenType: detectedType };
             }
 
             // Create new token
             const docRef = await db.collection('device_tokens').add(tokenData);
-            console.log(`📱 Token registered: ${token.substring(0, 20)}...`);
-            return { success: true, action: 'created', id: docRef.id };
+            console.log(`📱 Token registered (${detectedType}): ${token.substring(0, 20)}...`);
+            return { success: true, action: 'created', id: docRef.id, tokenType: detectedType };
         } catch (error) {
             console.error('❌ Error registering token:', error.message);
             throw error;

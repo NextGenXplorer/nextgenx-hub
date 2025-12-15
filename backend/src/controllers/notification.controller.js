@@ -115,8 +115,25 @@ exports.sendToUser = async (req, res, next) => {
             });
         }
 
-        const result = await fcmService.sendToMultipleDevices(tokens, title, body, data);
-        res.json(result);
+        // Filter only FCM tokens (Firebase Admin SDK doesn't support Expo tokens)
+        const fcmTokens = tokens.filter(t => !t.startsWith('ExponentPushToken'));
+        const expoTokens = tokens.filter(t => t.startsWith('ExponentPushToken'));
+
+        if (fcmTokens.length === 0) {
+            return res.json({
+                success: true,
+                message: 'No FCM devices registered for this user',
+                totalTokens: tokens.length,
+                expoTokens: expoTokens.length,
+                note: 'Expo tokens require Expo Push Service'
+            });
+        }
+
+        const result = await fcmService.sendToMultipleDevices(fcmTokens, title, body, data);
+        res.json({
+            ...result,
+            expoTokensSkipped: expoTokens.length
+        });
     } catch (error) {
         next(error);
     }

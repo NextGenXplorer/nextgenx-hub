@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
@@ -24,8 +24,48 @@ const quickActions = [
 export default function HomeScreen({ navigation }) {
     const { theme } = useTheme();
 
+    // Animation values for the bicycle
+    const translateX = useRef(new Animated.Value(-50)).current;
+    const bounce = useRef(new Animated.Value(0)).current;
+
     useEffect(() => {
         trackPageView('Home');
+
+        // Bicycle riding animation - moves across and loops
+        const rideAnimation = Animated.loop(
+            Animated.timing(translateX, {
+                toValue: 50,
+                duration: 3000,
+                easing: Easing.linear,
+                useNativeDriver: true,
+            })
+        );
+
+        // Bounce animation - slight up/down movement while riding
+        const bounceAnimation = Animated.loop(
+            Animated.sequence([
+                Animated.timing(bounce, {
+                    toValue: -3,
+                    duration: 150,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(bounce, {
+                    toValue: 3,
+                    duration: 150,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+            ])
+        );
+
+        rideAnimation.start();
+        bounceAnimation.start();
+
+        return () => {
+            rideAnimation.stop();
+            bounceAnimation.stop();
+        };
     }, []);
 
     return (
@@ -49,7 +89,19 @@ export default function HomeScreen({ navigation }) {
                     </View>
 
                     <View style={styles.illustrationPlaceholder}>
-                        <Ionicons name="bicycle" size={80} color={theme.textInverse} style={styles.illustration} />
+                        <Animated.View
+                            style={[
+                                styles.bicycleContainer,
+                                {
+                                    transform: [
+                                        { translateX: translateX },
+                                        { translateY: bounce },
+                                    ],
+                                },
+                            ]}
+                        >
+                            <Ionicons name="bicycle" size={80} color={theme.textInverse} style={styles.illustration} />
+                        </Animated.View>
                     </View>
                 </LinearGradient>
 
@@ -160,8 +212,13 @@ const styles = StyleSheet.create({
     },
     illustrationPlaceholder: {
         alignSelf: 'center',
-        width: 100,
+        width: 150,
         height: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    bicycleContainer: {
         justifyContent: 'center',
         alignItems: 'center',
     },

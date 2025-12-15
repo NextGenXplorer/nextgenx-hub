@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, Linking, RefreshControl, Image } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, Linking, RefreshControl, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { trackPageView, getAllDocuments } from '../../services/firebase';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { addBookmark, removeBookmark, getBookmarks } from '../../services/bookmarkService';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - spacing.lg * 3) / 2;
@@ -15,11 +17,58 @@ export default function AppsScreen({ navigation }) {
     const [apps, setApps] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [bookmarkedIds, setBookmarkedIds] = useState([]);
 
     useEffect(() => {
         trackPageView('Apps');
         loadApps();
     }, []);
+
+    // Reload bookmarks when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            loadBookmarkedIds();
+        }, [])
+    );
+
+    const loadBookmarkedIds = async () => {
+        try {
+            const bookmarks = await getBookmarks();
+            const appBookmarks = bookmarks
+                .filter(b => b.type === 'app')
+                .map(b => b.id);
+            setBookmarkedIds(appBookmarks);
+        } catch (error) {
+            console.error('Error loading bookmarks:', error);
+        }
+    };
+
+    const handleBookmark = async (app) => {
+        try {
+            const isBookmarked = bookmarkedIds.includes(app.id);
+            if (isBookmarked) {
+                await removeBookmark(app.id);
+                setBookmarkedIds(prev => prev.filter(id => id !== app.id));
+                Alert.alert('Removed', 'App removed from bookmarks');
+            } else {
+                const bookmarkData = {
+                    id: app.id,
+                    name: app.name,
+                    title: app.name,
+                    description: app.description || '',
+                    url: app.url || '',
+                    icon: app.icon || 'apps',
+                    iconUrl: app.iconUrl || '',
+                };
+                await addBookmark(bookmarkData, 'app');
+                setBookmarkedIds(prev => [...prev, app.id]);
+                Alert.alert('Saved', 'App added to bookmarks');
+            }
+        } catch (error) {
+            console.error('Bookmark error:', error);
+            Alert.alert('Error', 'Could not update bookmark');
+        }
+    };
 
     const loadApps = async () => {
         try {
@@ -44,41 +93,57 @@ export default function AppsScreen({ navigation }) {
         }
     };
 
-    const renderAppCard = ({ item }) => (
-        <TouchableOpacity
-            style={[styles.appCard, { backgroundColor: theme.backgroundCard }, shadows.medium]}
-            activeOpacity={0.8}
-            onPress={() => handleOpenApp(item)}
-        >
-            {item.iconUrl ? (
-                <View style={styles.appIconContainer}>
-                    <Image
-                        source={{ uri: item.iconUrl }}
-                        style={styles.appLogo}
-                        resizeMode="cover"
-                    />
-                </View>
-            ) : (
-                <LinearGradient
-                    colors={[theme.primary, theme.primaryLight]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.appIconContainer}
-                >
-                    <Ionicons name={item.icon || 'apps'} size={32} color={theme.textInverse} />
-                </LinearGradient>
-            )}
-            <Text style={[styles.appName, { color: theme.text }]} numberOfLines={1}>
-                {item.name}
-            </Text>
+    const renderAppCard = ({ item }) => {
+        const isBookmarked = bookmarkedIds.includes(item.id);
+
+        return (
             <TouchableOpacity
-                style={[styles.openButton, { backgroundColor: theme.accent3 }]}
+                style={[styles.appCard, { backgroundColor: theme.backgroundCard }, shadows.medium]}
+                activeOpacity={0.8}
                 onPress={() => handleOpenApp(item)}
             >
-                <Text style={[styles.openButtonText, { color: theme.primary }]}>Open</Text>
+                {/* Bookmark button */}
+                <TouchableOpacity
+                    style={styles.bookmarkButton}
+                    onPress={() => handleBookmark(item)}
+                >
+                    <Ionicons
+                        name={isBookmarked ? 'heart' : 'heart-outline'}
+                        size={20}
+                        color={isBookmarked ? '#FF6B6B' : theme.textSecondary}
+                    />
+                </TouchableOpacity>
+
+                {item.iconUrl ? (
+                    <View style={styles.appIconContainer}>
+                        <Image
+                            source={{ uri: item.iconUrl }}
+                            style={styles.appLogo}
+                            resizeMode="cover"
+                        />
+                    </View>
+                ) : (
+                    <LinearGradient
+                        colors={[theme.primary, theme.primaryLight]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.appIconContainer}
+                    >
+                        <Ionicons name={item.icon || 'apps'} size={32} color={theme.textInverse} />
+                    </LinearGradient>
+                )}
+                <Text style={[styles.appName, { color: theme.text }]} numberOfLines={1}>
+                    {item.name}
+                </Text>
+                <TouchableOpacity
+                    style={[styles.openButton, { backgroundColor: theme.accent3 }]}
+                    onPress={() => handleOpenApp(item)}
+                >
+                    <Text style={[styles.openButtonText, { color: theme.primary }]}>Open</Text>
+                </TouchableOpacity>
             </TouchableOpacity>
-        </TouchableOpacity>
-    );
+        );
+    };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
@@ -187,6 +252,14 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.xl,
         marginBottom: spacing.md,
         alignItems: 'center',
+        position: 'relative',
+    },
+    bookmarkButton: {
+        position: 'absolute',
+        top: spacing.sm,
+        right: spacing.sm,
+        padding: spacing.xs,
+        zIndex: 10,
     },
     appIconContainer: {
         width: 64,

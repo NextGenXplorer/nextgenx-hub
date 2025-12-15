@@ -1,22 +1,73 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Image } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { trackPageView, getAllDocuments } from '../../services/firebase';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { addBookmark, removeBookmark, getBookmarks } from '../../services/bookmarkService';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function YouTubeScreen({ navigation }) {
     const { theme } = useTheme();
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [bookmarkedIds, setBookmarkedIds] = useState([]);
 
     useEffect(() => {
         trackPageView('Content');
         loadVideos();
     }, []);
+
+    // Reload bookmarks when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            loadBookmarkedIds();
+        }, [])
+    );
+
+    const loadBookmarkedIds = async () => {
+        try {
+            const bookmarks = await getBookmarks();
+            const videoBookmarks = bookmarks
+                .filter(b => b.type === 'video')
+                .map(b => b.id);
+            setBookmarkedIds(videoBookmarks);
+        } catch (error) {
+            console.error('Error loading bookmarks:', error);
+        }
+    };
+
+    const handleBookmark = async (video) => {
+        try {
+            const videoUrl = video.url || video.link || video.videoUrl || video.youtubeUrl;
+            const videoId = video.videoId || getYouTubeVideoId(videoUrl);
+            const itemId = video.id || videoId;
+
+            const isBookmarked = bookmarkedIds.includes(itemId);
+            if (isBookmarked) {
+                await removeBookmark(itemId);
+                setBookmarkedIds(prev => prev.filter(id => id !== itemId));
+                Alert.alert('Removed', 'Video removed from bookmarks');
+            } else {
+                const bookmarkData = {
+                    id: itemId,
+                    title: video.title || 'Untitled Video',
+                    description: video.description || '',
+                    videoId: videoId,
+                    url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : videoUrl,
+                };
+                await addBookmark(bookmarkData, 'video');
+                setBookmarkedIds(prev => [...prev, itemId]);
+                Alert.alert('Saved', 'Video added to bookmarks');
+            }
+        } catch (error) {
+            console.error('Bookmark error:', error);
+            Alert.alert('Error', 'Could not update bookmark');
+        }
+    };
 
     const loadVideos = async () => {
         try {
@@ -52,10 +103,34 @@ export default function YouTubeScreen({ navigation }) {
         // Try to get video ID directly from item, or extract from URL
         const videoUrl = item.url || item.link || item.videoUrl || item.youtubeUrl;
         const videoId = item.videoId || getYouTubeVideoId(videoUrl);
+        const itemId = item.id || videoId;
+        const isBookmarked = bookmarkedIds.includes(itemId);
 
         const thumbnailUrl = videoId
             ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
             : null;
+
+        // Format the upload date if available
+        const formatDate = (timestamp) => {
+            if (!timestamp) return null;
+            try {
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                const now = new Date();
+                const diffTime = Math.abs(now - date);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 0) return 'Today';
+                if (diffDays === 1) return 'Yesterday';
+                if (diffDays < 7) return `${diffDays} days ago`;
+                if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+                if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+                return `${Math.floor(diffDays / 365)} years ago`;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const uploadDate = formatDate(item.createdAt);
 
         return (
             <TouchableOpacity
@@ -76,10 +151,21 @@ export default function YouTubeScreen({ navigation }) {
                             <Ionicons name="play-circle" size={60} color={theme.primary} />
                         </View>
                     )}
-                    {/* Duration Badge */}
-                    <View style={styles.durationBadge}>
-                        <Text style={styles.durationText}>7:26</Text>
+                    {/* Play Icon Overlay */}
+                    <View style={styles.playOverlay}>
+                        <Ionicons name="play-circle" size={50} color="rgba(255,255,255,0.9)" />
                     </View>
+                    {/* Bookmark Button on Thumbnail */}
+                    <TouchableOpacity
+                        style={styles.thumbnailBookmark}
+                        onPress={() => handleBookmark(item)}
+                    >
+                        <Ionicons
+                            name={isBookmarked ? 'heart' : 'heart-outline'}
+                            size={24}
+                            color={isBookmarked ? '#FF6B6B' : '#FFFFFF'}
+                        />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Video Info */}
@@ -92,16 +178,23 @@ export default function YouTubeScreen({ navigation }) {
                     {/* Title and Meta */}
                     <View style={styles.videoDetails}>
                         <Text style={[styles.videoTitle, { color: theme.text }]} numberOfLines={2}>
-                            {item.title}
+                            {item.title || 'Untitled Video'}
                         </Text>
                         <Text style={[styles.videoMeta, { color: theme.textSecondary }]}>
-                            NextGenX • {item.views || '6.7K'} views • {item.uploadTime || '2 days ago'}
+                            NextGenX{uploadDate ? ` • ${uploadDate}` : ''}
                         </Text>
                     </View>
 
-                    {/* Menu Button */}
-                    <TouchableOpacity style={styles.menuButton}>
-                        <Ionicons name="ellipsis-vertical" size={20} color={theme.textSecondary} />
+                    {/* Bookmark Button */}
+                    <TouchableOpacity
+                        style={styles.menuButton}
+                        onPress={() => handleBookmark(item)}
+                    >
+                        <Ionicons
+                            name={isBookmarked ? 'heart' : 'heart-outline'}
+                            size={22}
+                            color={isBookmarked ? '#FF6B6B' : theme.textSecondary}
+                        />
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>
@@ -219,19 +312,23 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    durationBadge: {
+    playOverlay: {
         position: 'absolute',
-        bottom: 8,
-        right: 8,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
     },
-    durationText: {
-        color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: '600',
+    thumbnailBookmark: {
+        position: 'absolute',
+        top: spacing.sm,
+        right: spacing.sm,
+        padding: spacing.xs,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 20,
     },
     videoInfo: {
         flexDirection: 'row',

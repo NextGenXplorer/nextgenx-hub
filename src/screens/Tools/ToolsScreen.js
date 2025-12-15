@@ -1,22 +1,72 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Linking, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Linking, RefreshControl, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, fontSize, fontWeight, borderRadius, shadows } from '../../theme/colors';
 import { trackPageView, getAllDocuments } from '../../services/firebase';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { addBookmark, removeBookmark, getBookmarks } from '../../services/bookmarkService';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ToolsScreen({ navigation }) {
     const { theme } = useTheme();
     const [tools, setTools] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [bookmarkedIds, setBookmarkedIds] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         trackPageView('Tools');
         loadTools();
     }, []);
+
+    // Reload bookmarks when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            loadBookmarkedIds();
+        }, [])
+    );
+
+    const loadBookmarkedIds = async () => {
+        try {
+            const bookmarks = await getBookmarks();
+            const toolBookmarks = bookmarks
+                .filter(b => b.type === 'tool')
+                .map(b => b.id);
+            setBookmarkedIds(toolBookmarks);
+        } catch (error) {
+            console.error('Error loading bookmarks:', error);
+        }
+    };
+
+    const handleBookmark = async (tool) => {
+        try {
+            const isBookmarked = bookmarkedIds.includes(tool.id);
+            if (isBookmarked) {
+                await removeBookmark(tool.id);
+                setBookmarkedIds(prev => prev.filter(id => id !== tool.id));
+                Alert.alert('Removed', 'Tool removed from bookmarks');
+            } else {
+                const bookmarkData = {
+                    id: tool.id,
+                    name: tool.name || tool.title,
+                    title: tool.name || tool.title,
+                    description: tool.description || '',
+                    url: tool.url || '',
+                    icon: tool.icon || 'construct',
+                    category: tool.category || '',
+                };
+                await addBookmark(bookmarkData, 'tool');
+                setBookmarkedIds(prev => [...prev, tool.id]);
+                Alert.alert('Saved', 'Tool added to bookmarks');
+            }
+        } catch (error) {
+            console.error('Bookmark error:', error);
+            Alert.alert('Error', 'Could not update bookmark');
+        }
+    };
 
     const loadTools = async () => {
         try {
@@ -41,28 +91,50 @@ export default function ToolsScreen({ navigation }) {
         }
     };
 
-    const renderToolCard = ({ item }) => (
-        <TouchableOpacity
-            style={[styles.toolCard, { backgroundColor: theme.backgroundCard }, shadows.small]}
-            activeOpacity={0.8}
-            onPress={() => handleOpenTool(item)}
-        >
-            <View style={[styles.toolIcon, { backgroundColor: theme.accent3 }]}>
-                <Ionicons name="construct" size={24} color={theme.primary} />
-            </View>
-            <View style={styles.toolInfo}>
-                <Text style={[styles.toolTitle, { color: theme.text }]}>{item.title}</Text>
-                <Text style={[styles.toolDescription, { color: theme.textSecondary }]}>
-                    {item.description || 'No description'}
-                </Text>
-            </View>
-            {item.category && (
-                <View style={[styles.categoryBadge, { backgroundColor: theme.accent1 }]}>
-                    <Text style={[styles.categoryText, { color: theme.primary }]}>{item.category}</Text>
+    // Filter tools based on search query
+    const filteredTools = tools.filter(tool => {
+        const name = (tool.name || tool.title || '').toLowerCase();
+        const description = (tool.description || '').toLowerCase();
+        const query = searchQuery.toLowerCase();
+        return name.includes(query) || description.includes(query);
+    });
+
+    const renderToolCard = ({ item }) => {
+        const isBookmarked = bookmarkedIds.includes(item.id);
+
+        return (
+            <TouchableOpacity
+                style={[styles.toolCard, { backgroundColor: theme.backgroundCard }, shadows.small]}
+                activeOpacity={0.8}
+                onPress={() => handleOpenTool(item)}
+            >
+                <View style={[styles.toolIcon, { backgroundColor: theme.accent3 }]}>
+                    <Ionicons name={item.icon || 'construct'} size={24} color={theme.primary} />
                 </View>
-            )}
-        </TouchableOpacity>
-    );
+                <View style={styles.toolInfo}>
+                    <Text style={[styles.toolTitle, { color: theme.text }]}>{item.name || item.title}</Text>
+                    <Text style={[styles.toolDescription, { color: theme.textSecondary }]}>
+                        {item.description || 'No description'}
+                    </Text>
+                </View>
+                {item.category && (
+                    <View style={[styles.categoryBadge, { backgroundColor: theme.accent1 }]}>
+                        <Text style={[styles.categoryText, { color: theme.primary }]}>{item.category}</Text>
+                    </View>
+                )}
+                <TouchableOpacity
+                    style={styles.bookmarkButton}
+                    onPress={() => handleBookmark(item)}
+                >
+                    <Ionicons
+                        name={isBookmarked ? 'heart' : 'heart-outline'}
+                        size={22}
+                        color={isBookmarked ? '#FF6B6B' : theme.textSecondary}
+                    />
+                </TouchableOpacity>
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
@@ -95,7 +167,14 @@ export default function ToolsScreen({ navigation }) {
                     style={[styles.searchInput, { color: theme.text }]}
                     placeholder="Search tools..."
                     placeholderTextColor={theme.textSecondary}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
                 />
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery('')}>
+                        <Ionicons name="close-circle" size={20} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Tools List */}
@@ -105,7 +184,7 @@ export default function ToolsScreen({ navigation }) {
                 </View>
             ) : (
                 <FlatList
-                    data={tools}
+                    data={filteredTools}
                     renderItem={renderToolCard}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
@@ -117,10 +196,10 @@ export default function ToolsScreen({ navigation }) {
                         <View style={styles.emptyState}>
                             <Ionicons name="construct" size={60} color={theme.textSecondary} style={{ opacity: 0.3 }} />
                             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                                No tools available yet
+                                {searchQuery ? 'No tools found' : 'No tools available yet'}
                             </Text>
                             <Text style={[styles.emptySubtext, { color: theme.textSecondary }]}>
-                                Pull down to refresh
+                                {searchQuery ? 'Try a different search' : 'Pull down to refresh'}
                             </Text>
                         </View>
                     }
@@ -236,6 +315,10 @@ const styles = StyleSheet.create({
     categoryText: {
         fontSize: fontSize.xs,
         fontWeight: fontWeight.semibold,
+    },
+    bookmarkButton: {
+        padding: spacing.sm,
+        marginLeft: spacing.xs,
     },
     emptyState: {
         alignItems: 'center',

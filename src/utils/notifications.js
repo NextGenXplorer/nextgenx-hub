@@ -1,4 +1,4 @@
-// Push Notification Service using Expo Notifications + Custom Backend
+// Push Notification Service using Native FCM + Expo Notifications
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 // Configuration
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 const FCM_TOKEN_KEY = 'push_token';
+const TOKEN_TYPE_KEY = 'push_token_type';
 const NOTIFICATION_SETTINGS_KEY = 'notification_settings';
 
 // Configure how notifications appear when app is in foreground
@@ -46,10 +47,14 @@ export const requestNotificationPermission = async () => {
         if (Platform.OS === 'android') {
             await Notifications.setNotificationChannelAsync('nextgenx_channel', {
                 name: 'NextGenX Notifications',
+                description: 'NextGenX Hub - Updates and Alerts',
                 importance: Notifications.AndroidImportance.MAX,
                 vibrationPattern: [0, 250, 250, 250],
                 lightColor: '#FF8C42',
                 sound: 'default',
+                enableLights: true,
+                enableVibrate: true,
+                showBadge: true,
             });
         }
 
@@ -62,14 +67,17 @@ export const requestNotificationPermission = async () => {
 };
 
 /**
- * Get Expo Push Token
+ * Get Push Token - Native FCM for production, Expo token for development
+ * This is the KEY fix: Use getDevicePushTokenAsync() for native FCM tokens
  */
 export const getPushToken = async () => {
     try {
         // Check cached token first
         const cachedToken = await AsyncStorage.getItem(FCM_TOKEN_KEY);
+        const cachedType = await AsyncStorage.getItem(TOKEN_TYPE_KEY);
         if (cachedToken) {
-            return cachedToken;
+            console.log(`Using cached ${cachedType || 'unknown'} token`);
+            return { token: cachedToken, type: cachedType || 'unknown' };
         }
 
         if (!Device.isDevice) {
@@ -77,24 +85,49 @@ export const getPushToken = async () => {
             return null;
         }
 
-        // Get project ID from app config
-        const projectId = Constants.expoConfig?.extra?.eas?.projectId ||
-                         Constants.easConfig?.projectId;
+        let token;
+        let tokenType;
 
-        if (!projectId) {
-            console.log('Project ID not found. Configure EAS for push notifications.');
-            return null;
+        // Try to get native FCM token first (works in standalone APK/AAB)
+        try {
+            const deviceToken = await Notifications.getDevicePushTokenAsync();
+            token = deviceToken.data;
+            tokenType = 'fcm';
+            console.log('FCM Push Token (Production):', token.substring(0, 30) + '...');
+        } catch (deviceTokenError) {
+            // Fallback to Expo token for Expo Go development
+            console.log('Could not get FCM token, falling back to Expo token (Development)');
+            console.log('DeviceToken error:', deviceTokenError.message);
+
+            try {
+                // Get project ID from app config
+                const projectId = Constants.expoConfig?.extra?.eas?.projectId ||
+                    Constants.easConfig?.projectId;
+
+                if (!projectId) {
+                    console.log('Project ID not found. Configure EAS for push notifications.');
+                    return null;
+                }
+
+                const expoPushToken = await Notifications.getExpoPushTokenAsync({
+                    projectId,
+                });
+                token = expoPushToken.data;
+                tokenType = 'expo';
+                console.log('Expo Push Token (Development):', token.substring(0, 30) + '...');
+            } catch (expoTokenError) {
+                console.error('Error getting Expo push token:', expoTokenError);
+                return null;
+            }
         }
 
-        const token = await Notifications.getExpoPushTokenAsync({
-            projectId,
-        });
+        if (token) {
+            // Cache the token and type
+            await AsyncStorage.setItem(FCM_TOKEN_KEY, token);
+            await AsyncStorage.setItem(TOKEN_TYPE_KEY, tokenType);
+        }
 
-        // Cache the token
-        await AsyncStorage.setItem(FCM_TOKEN_KEY, token.data);
-        console.log('Push token obtained:', token.data.substring(0, 30) + '...');
-
-        return token.data;
+        return { token, type: tokenType };
     } catch (error) {
         console.error('Error getting push token:', error);
         return null;
@@ -106,16 +139,19 @@ export const getPushToken = async () => {
  */
 export const registerDeviceToken = async (userId = null) => {
     try {
-        const token = await getPushToken();
-        if (!token) {
+        const tokenData = await getPushToken();
+        if (!tokenData || !tokenData.token) {
             console.log('No push token available');
             return false;
         }
+
+        const { token, type } = tokenData;
 
         const deviceInfo = {
             platform: Platform.OS,
             deviceName: Device.deviceName || 'Unknown',
             appVersion: Constants.expoConfig?.version || '1.0.0',
+            osVersion: Platform.Version,
         };
 
         const response = await fetch(`${BACKEND_URL}/api/devices/register`, {
@@ -125,6 +161,7 @@ export const registerDeviceToken = async (userId = null) => {
             },
             body: JSON.stringify({
                 token,
+                tokenType: type,
                 userId,
                 deviceInfo,
             }),
@@ -133,7 +170,7 @@ export const registerDeviceToken = async (userId = null) => {
         const data = await response.json();
 
         if (data.success) {
-            console.log('Device registered successfully');
+            console.log(`Device registered successfully (${type} token)`);
             return true;
         } else {
             console.error('Device registration failed:', data.error);
@@ -162,6 +199,7 @@ export const unregisterDeviceToken = async () => {
         });
 
         await AsyncStorage.removeItem(FCM_TOKEN_KEY);
+        await AsyncStorage.removeItem(TOKEN_TYPE_KEY);
         console.log('Device unregistered');
         return true;
     } catch (error) {
@@ -171,51 +209,16 @@ export const unregisterDeviceToken = async () => {
 };
 
 /**
- * Subscribe to a notification topic
+ * Clear cached token (useful when token becomes invalid)
  */
-export const subscribeToTopic = async (topic) => {
+export const clearCachedToken = async () => {
     try {
-        const token = await getPushToken();
-        if (!token) return false;
-
-        const response = await fetch(`${BACKEND_URL}/api/notifications/subscribe`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token, topic }),
-        });
-
-        const data = await response.json();
-        console.log(`Subscribed to topic: ${topic}`);
-        return data.success;
+        await AsyncStorage.removeItem(FCM_TOKEN_KEY);
+        await AsyncStorage.removeItem(TOKEN_TYPE_KEY);
+        console.log('Cached token cleared');
+        return true;
     } catch (error) {
-        console.error('Error subscribing to topic:', error);
-        return false;
-    }
-};
-
-/**
- * Unsubscribe from a notification topic
- */
-export const unsubscribeFromTopic = async (topic) => {
-    try {
-        const token = await getPushToken();
-        if (!token) return false;
-
-        const response = await fetch(`${BACKEND_URL}/api/notifications/unsubscribe`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token, topic }),
-        });
-
-        const data = await response.json();
-        console.log(`Unsubscribed from topic: ${topic}`);
-        return data.success;
-    } catch (error) {
-        console.error('Error unsubscribing from topic:', error);
+        console.error('Error clearing cached token:', error);
         return false;
     }
 };
@@ -373,11 +376,11 @@ export const initializePushNotifications = async (userId = null) => {
         }
 
         // Register device with backend
-        await registerDeviceToken(userId);
-
-        // Subscribe to default topics
-        await subscribeToTopic('all_users');
-        await subscribeToTopic('announcements');
+        const registered = await registerDeviceToken(userId);
+        if (!registered) {
+            console.log('Failed to register device token');
+            // Don't return false - token might still work locally
+        }
 
         console.log('Push notifications initialized successfully');
         return true;

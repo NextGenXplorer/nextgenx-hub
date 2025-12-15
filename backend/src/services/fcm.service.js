@@ -2,9 +2,32 @@ const { getMessaging, getFirestore } = require('../config/firebase');
 
 class FCMService {
     /**
+     * Check if token is a valid FCM token (not Expo)
+     */
+    isValidFCMToken(token) {
+        if (!token) return false;
+        // Expo tokens start with 'ExponentPushToken['
+        if (token.startsWith('ExponentPushToken')) {
+            console.log('⚠️ Expo token detected - Firebase Admin SDK cannot send to Expo tokens');
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Send notification to a single device
      */
     async sendToDevice(token, title, body, data = {}) {
+        // Validate token type
+        if (!this.isValidFCMToken(token)) {
+            return {
+                success: false,
+                error: 'Cannot send to Expo token using Firebase Admin SDK',
+                tokenType: 'expo',
+                suggestion: 'Use Expo Push Notification Service for Expo tokens'
+            };
+        }
+
         const messaging = getMessaging();
 
         const message = {
@@ -154,24 +177,45 @@ class FCMService {
 
     /**
      * Send notification to all registered devices
+     * Only sends to FCM tokens (Firebase Admin SDK doesn't support Expo tokens)
      */
     async sendToAll(title, body, data = {}) {
         const db = getFirestore();
 
         try {
-            const snapshot = await db.collection('device_tokens').get();
-            const tokens = snapshot.docs.map(doc => doc.data().token);
+            // Get only active tokens
+            const snapshot = await db.collection('device_tokens')
+                .where('isActive', '==', true)
+                .get();
 
-            if (tokens.length === 0) {
-                return { success: true, message: 'No devices registered' };
+            // Separate FCM and Expo tokens
+            const allTokenData = snapshot.docs.map(doc => doc.data());
+            const fcmTokens = allTokenData
+                .filter(t => t.tokenType !== 'expo' && !t.token.startsWith('ExponentPushToken'))
+                .map(t => t.token);
+            const expoTokens = allTokenData
+                .filter(t => t.tokenType === 'expo' || t.token.startsWith('ExponentPushToken'))
+                .map(t => t.token);
+
+            console.log(`📱 Token breakdown: ${fcmTokens.length} FCM, ${expoTokens.length} Expo`);
+
+            if (fcmTokens.length === 0) {
+                return {
+                    success: true,
+                    message: 'No FCM devices registered',
+                    totalDevices: allTokenData.length,
+                    fcmDevices: 0,
+                    expoDevices: expoTokens.length,
+                    note: 'Expo tokens require Expo Push Service (not Firebase Admin SDK)'
+                };
             }
 
             // FCM allows max 500 tokens per multicast
             const batchSize = 500;
             const results = [];
 
-            for (let i = 0; i < tokens.length; i += batchSize) {
-                const batch = tokens.slice(i, i + batchSize);
+            for (let i = 0; i < fcmTokens.length; i += batchSize) {
+                const batch = fcmTokens.slice(i, i + batchSize);
                 const result = await this.sendToMultipleDevices(batch, title, body, data);
                 results.push(result);
             }
@@ -181,9 +225,12 @@ class FCMService {
 
             return {
                 success: true,
-                totalDevices: tokens.length,
+                totalDevices: allTokenData.length,
+                fcmDevices: fcmTokens.length,
+                expoDevices: expoTokens.length,
                 successCount: totalSuccess,
                 failureCount: totalFailure,
+                note: expoTokens.length > 0 ? `${expoTokens.length} Expo tokens skipped (use Expo Push Service)` : undefined
             };
         } catch (error) {
             console.error('❌ Error sending to all devices:', error.message);

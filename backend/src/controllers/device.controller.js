@@ -5,7 +5,7 @@ const deviceService = require('../services/device.service');
  */
 exports.registerToken = async (req, res, next) => {
     try {
-        const { token, userId, deviceInfo } = req.body;
+        const { token, userId, deviceInfo, tokenType } = req.body;
 
         if (!token) {
             return res.status(400).json({
@@ -14,7 +14,7 @@ exports.registerToken = async (req, res, next) => {
             });
         }
 
-        const result = await deviceService.registerToken(token, userId, deviceInfo);
+        const result = await deviceService.registerToken(token, userId, deviceInfo, tokenType);
         res.json(result);
     } catch (error) {
         next(error);

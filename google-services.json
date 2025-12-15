@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "785697064172",
+    "project_id": "nextgenx-7a8a8",
+    "storage_bucket": "nextgenx-7a8a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:785697064172:android:e47d414aacdd3a332911c9",
+        "android_client_info": {
+          "package_name": "com.nexgenx.nexgenapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcI5pp7C7acZMNZOBOHyV9izKkE8ueV9w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:785697064172:android:acadbc3edaf712f42911c9",
+        "android_client_info": {
+          "package_name": "com.nxg.NextGenX"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcI5pp7C7acZMNZOBOHyV9izKkE8ueV9w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
