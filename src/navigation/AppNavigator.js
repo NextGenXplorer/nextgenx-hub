@@ -24,6 +24,7 @@ import YouTubeManager from '../screens/Admin/YouTubeManager';
 import AppsManager from '../screens/Admin/AppsManager';
 import FeedbackManager from '../screens/Admin/FeedbackManager';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
+import PrivacyPolicyScreen from '../screens/Legal/PrivacyPolicyScreen';
 
 const Stack = createStackNavigator();
 
@@ -98,6 +99,7 @@ export default function AppNavigator() {
                     <Stack.Screen name="YouTubeManager" component={YouTubeManager} options={{ title: 'Manage Videos' }} />
                     <Stack.Screen name="AppsManager" component={AppsManager} options={{ title: 'Manage Apps' }} />
                     <Stack.Screen name="FeedbackManager" component={FeedbackManager} options={{ title: 'Manage Feedback' }} />
+                    <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ title: 'Privacy Policy' }} />
                 </Stack.Navigator>
 
                 {/* Global Bottom Navigation - Only show on main screens */}

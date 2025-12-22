@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - NextGenX Hub</title>
+    <meta name="description" content="Terms of Service for NextGenX Hub mobile application. Read our terms and conditions for using the app.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+
+        .header-content {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .meta-info {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meta-item .icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .meta-item .label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .meta-item .value {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(129, 140, 248, 0.1) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .section-content {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .section-content p {
+            margin-bottom: 16px;
+        }
+
+        .section-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .bullet-list {
+            list-style: none;
+            margin-top: 12px;
+        }
+
+        .bullet-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .bullet-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .bullet-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .contact-section h2 {
+            color: white;
+        }
+
+        .contact-section .section-content {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .contact-section .section-icon {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            color: var(--primary);
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .header {
+                padding: 40px 16px;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .container {
+                padding: 20px 16px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .meta-info {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-icon">&#128220;</div>
+            <h1>Terms of Service</h1>
+            <p>Terms and conditions for using NextGenX Hub</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="meta-info">
+            <div class="meta-item">
+                <div class="icon">&#128197;</div>
+                <div>
+                    <div class="label">Last Updated</div>
+                    <div class="value">January 1, 2025</div>
+                </div>
+            </div>
+            <div class="meta-item">
+                <div class="icon">&#128196;</div>
+                <div>
+                    <div class="label">Version</div>
+                    <div class="value">1.0</div>
+                </div>
+            </div>
+            <div class="meta-item">
+                <div class="icon">&#128241;</div>
+                <div>
+                    <div class="label">App</div>
+                    <div class="value">NextGenX Hub</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acceptance of Terms -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#9989;</div>
+                <div>
+                    <h2>Acceptance of Terms</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <p>By downloading, installing, or using NextGenX Hub, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our app.</p>
+            </div>
+        </section>
+
+        <!-- Use of Service -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#128187;</div>
+                <div>
+                    <h2>Use of Service</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <ul class="bullet-list">
+                    <li>You must be at least 13 years old to use this app</li>
+                    <li>You agree to use the app only for lawful purposes</li>
+                    <li>You are responsible for maintaining the confidentiality of your device</li>
+                    <li>You agree not to misuse or attempt to disrupt the service</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Intellectual Property -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#169;</div>
+                <div>
+                    <h2>Intellectual Property</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <p>All content, features, and functionality of NextGenX Hub are owned by NextGenX and are protected by copyright, trademark, and other intellectual property laws.</p>
+            </div>
+        </section>
+
+        <!-- User Content -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#128221;</div>
+                <div>
+                    <h2>User Content</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <ul class="bullet-list">
+                    <li>You retain ownership of any content you create using the app (such as QR codes)</li>
+                    <li>You are responsible for the content you generate and share</li>
+                    <li>You grant us permission to store your bookmarks and preferences to provide the service</li>
+                    <li>We do not claim ownership over your generated content</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Disclaimer -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#9888;</div>
+                <div>
+                    <h2>Disclaimer</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <p>NextGenX Hub is provided "as is" without warranties of any kind. We do not guarantee that the app will be error-free or uninterrupted. External links and tools provided through the app are third-party resources and we are not responsible for their content or availability.</p>
+            </div>
+        </section>
+
+        <!-- Limitation of Liability -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#128737;</div>
+                <div>
+                    <h2>Limitation of Liability</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <p>NextGenX shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the app. This includes but is not limited to loss of data, loss of profits, or any damages resulting from the use of third-party tools or links provided through the app.</p>
+            </div>
+        </section>
+
+        <!-- Termination -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#128683;</div>
+                <div>
+                    <h2>Termination</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <p>We reserve the right to terminate or suspend access to our service immediately, without prior notice, for any reason whatsoever, including without limitation if you breach the Terms. You may also stop using our services at any time by uninstalling the app.</p>
+            </div>
+        </section>
+
+        <!-- Changes to Terms -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#128260;</div>
+                <div>
+                    <h2>Changes to Terms</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <p>We reserve the right to modify these terms at any time. Continued use of the app after changes constitutes acceptance of the new terms. We will update the "Last Updated" date when changes are made.</p>
+            </div>
+        </section>
+
+        <!-- Governing Law -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">&#9878;</div>
+                <div>
+                    <h2>Governing Law</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <p>These Terms shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law provisions.</p>
+            </div>
+        </section>
+
+        <!-- Contact -->
+        <section class="section contact-section">
+            <div class="section-header" style="justify-content: center;">
+                <div class="section-icon">&#128231;</div>
+                <div>
+                    <h2>Contact</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <p>For questions about these Terms of Service, please contact us.</p>
+                <a href="mailto:nxgextra@gmail.com" class="contact-btn">
+                    &#9993; nxgextra@gmail.com
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 NextGenX Hub. All rights reserved.</p>
+        <p style="margin-top: 8px;">
+            <a href="/terms-of-service">Terms of Service</a> &bull;
+            <a href="/privacy-policy">Privacy Policy</a>
+        </p>
+    </footer>
+</body>
+</html>

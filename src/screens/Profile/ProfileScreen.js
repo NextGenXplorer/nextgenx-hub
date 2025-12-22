@@ -352,6 +352,21 @@ export default function ProfileScreen({ navigation }) {
                             <Ionicons name="open-outline" size={20} color={theme.textSecondary} />
                         </TouchableOpacity>
 
+                        <TouchableOpacity
+                            style={[styles.helpOption, { backgroundColor: theme.backgroundSecondary }]}
+                            onPress={() => {
+                                setHelpModalVisible(false);
+                                navigation.navigate('PrivacyPolicy');
+                            }}
+                        >
+                            <Ionicons name="shield-checkmark" size={24} color={theme.primary} />
+                            <View style={styles.helpOptionText}>
+                                <Text style={[styles.helpOptionTitle, { color: theme.text }]}>Privacy Policy</Text>
+                                <Text style={[styles.helpOptionDesc, { color: theme.textSecondary }]}>How we protect your data</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+                        </TouchableOpacity>
+
                         <View style={[styles.versionInfo, { borderTopColor: theme.border }]}>
                             <Text style={[styles.versionText, { color: theme.textSecondary }]}>
                                 NextGenX Hub v1.0.0

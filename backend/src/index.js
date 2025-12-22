@@ -1,11 +1,13 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 
 const notificationRoutes = require('./routes/notification.routes');
 const deviceRoutes = require('./routes/device.routes');
+const legalRoutes = require('./routes/legal.routes');
 const { initializeFirebase } = require('./config/firebase');
 
 const app = express();
@@ -28,6 +30,16 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/devices', deviceRoutes);
+app.use('/api/legal', legalRoutes);
+
+// Legal pages (direct URL access for web browsers)
+app.get('/privacy-policy', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/privacy-policy.html'));
+});
+
+app.get('/terms-of-service', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/terms-of-service.html'));
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
